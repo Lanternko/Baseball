@@ -208,3 +208,200 @@ h4 { font-size: 0.9em; color: #345; margin-top: 15px; margin-bottom: 5px; text-a
 .outcome-homerun { color: #007bff; font-size: 1.3em; min-height: 30px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
 .outcome-single, .outcome-double, .outcome-triple { color: deepskyblue; font-weight: bold; }
 .outcome-walk, .outcome-walks { color: royalblue; }
+
+
+/* 中等螢幕到手機 - 主要斷點 */
+@media (max-width: 768px) {
+    body {
+        font-size: 13px; /* 可略微調整基礎字體大小 */
+        padding: 5px;    /* 減少 body 邊距 */
+    }
+
+    h1 {
+        font-size: 1.5em; /* 調整標題大小 */
+        margin-bottom: 8px;
+    }
+
+    h2 {
+        font-size: 1.1em;
+    }
+
+    .game-layout {
+        flex-direction: column; /* 將主區塊改為垂直堆疊 */
+        align-items: center;    /* 堆疊後居中對齊 */
+        gap: 15px;              /* 調整區塊間距 */
+    }
+
+    .team-panel {
+        width: 95%;             /* 讓資訊面板佔據大部分寬度 */
+        max-width: 450px;       /* 設定最大寬度，避免在稍大平板上過寬 */
+        margin-bottom: 10px;
+        max-height: none;       /* 允許面板內容增長 */
+        order: initial;         /* 確保在 column 方向時順序正確 */
+    }
+
+    /* 如果希望客隊資訊在最上面，主隊在最下面 */
+    #awayTeamPanel { order: 1; }
+    .main-game-area { order: 2; width: 95%; }
+    #homeTeamPanel { order: 3; }
+
+
+    .current-player-display h5 {
+        font-size: 1em;
+    }
+    .current-player-display .player-main-name {
+        font-size: 1.15em;
+    }
+    .current-player-display .player-stats-detailed {
+        font-size: 0.85em;
+        gap: 2px 8px; /* 縮小能力值標籤與數值的間距 */
+    }
+    .current-player-display .stat-value {
+        padding: 1px 4px; /* 縮小能力值背景的 padding */
+    }
+
+    .team-panel li {
+        font-size: 0.8em;
+        padding: 5px 2px;
+    }
+}
+
+/* style.css (繼續追加於 @media (max-width: 768px) 內部) */
+
+.scoreboard-container {
+    padding: 8px; /* 減少計分板容器內邊距 */
+}
+
+#scoreboard th, #scoreboard td {
+    padding: 4px;       /* 減少儲存格內邊距 */
+    font-size: 0.75em;  /* 縮小計分板字體 */
+    min-width: 18px;    /* 調整最小寬度 */
+}
+#scoreboard .team-name {
+    min-width: 50px;
+}
+    #scoreboard .total-runs,
+    #scoreboard .total-hits,
+    #scoreboard .total-errors {
+    min-width: 25px;
+}
+
+
+.field-display {
+    padding: 10px; /* 減少球場顯示區內邊距 */
+}
+
+.field-header {
+    font-size: 1em;   /* 調整局數/出局數字體 */
+    margin-bottom: 12px;
+}
+.out-light {
+    width: 18px; height: 18px; /* 縮小出局燈 */
+}
+
+.field-display .diamond-area {
+    width: 160px;  /* 縮小壘包區域 */
+    height: 160px;
+    margin: 20px auto 15px auto;
+}
+
+.field-display .diamond-area .base {
+    width: 45px; /* 縮小壘包本身 */
+    height: 45px;
+    font-size: 0.8em;
+}
+
+/* 調整跑者名稱的相對位置 */
+#runnerName1B { top: calc(50% - 10px); right: -65px; font-size: 0.75em; padding: 1px 3px;}
+#runnerName2B { top: -30px; left: 50%; transform: translateX(-50%); font-size: 0.75em; padding: 1px 3px;}
+#runnerName3B { top: calc(50% - 10px); left: -65px; font-size: 0.75em; padding: 1px 3px;}
+
+#at-bat-outcome {
+    padding: 10px;
+}
+#outcome-text {
+    font-size: 1em; /* 調整結果文字大小 */
+    min-height: 20px;
+}
+.outcome-homerun { /* 全壘打文字稍微小一點，避免換行 */
+    font-size: 1.15em;
+}
+
+
+.game-controls button {
+    padding: 12px 20px; /* 調整按鈕大小 */
+    font-size: 1em;
+    margin: 8px 0;      /* 增加按鈕垂直間距 */
+    display: block;     /* 讓按鈕獨佔一行 */
+    width: 90%;         /* 設定按鈕寬度 */
+    max-width: 300px;   /* 按鈕最大寬度 */
+    margin-left: auto;
+    margin-right: auto;
+}
+/* 如果希望兩個按鈕並排且佔滿寬度，可以這樣：
+#startGameButton, #nextPlayButton {
+    width: calc(50% - 10px);
+    margin: 5px;
+    box-sizing: border-box;
+}
+.game-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+*/
+
+/* style.css (在 768px 的 @media 外部，新增一個更小的斷點) */
+
+@media (max-width: 480px) {
+    body {
+        font-size: 12px; /* 進一步縮小基礎字體 */
+    }
+    h1 {
+        font-size: 1.3em;
+    }
+
+    .team-panel {
+        width: 98%; /* 面板幾乎佔滿 */
+    }
+    .main-game-area {
+        width: 98%;
+    }
+
+    /* 如果計分板在小螢幕上仍然太寬，可以讓其水平滾動 */
+    .scoreboard-container {
+        overflow-x: auto;
+    }
+    #scoreboard {
+        /* 設定一個最小寬度，確保表格內容不會被過度壓縮 */
+        min-width: 380px; /* 可根據實際內容調整 */
+    }
+     #scoreboard th, #scoreboard td {
+        font-size: 0.7em;
+        padding: 3px;
+        min-width: 16px;
+    }
+    #scoreboard .team-name {
+        min-width: 45px;
+    }
+
+    .field-display .diamond-area {
+        width: 130px; /* 更小的壘包區域 */
+        height: 130px;
+    }
+    .field-display .diamond-area .base {
+        width: 38px; /* 更小的壘包 */
+        height: 38px;
+    }
+    #runnerName1B { top: calc(50% - 8px); right: -55px; font-size: 0.7em; }
+    #runnerName2B { top: -25px; font-size: 0.7em;}
+    #runnerName3B { top: calc(50% - 8px); left: -55px; font-size: 0.7em;}
+
+    .game-controls button {
+        padding: 10px 15px;
+        font-size: 0.9em;
+    }
+    #outcome-text {
+        font-size: 0.95em;
+    }
+}
