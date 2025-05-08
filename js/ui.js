@@ -105,6 +105,30 @@ export function initializeUI(gameTeams) {
 
 // --- Core UI Update Functions ---
 
+function abbreviatePlayerName(fullName, maxLength = 16, panelWidthChars = 15) { // panelWidthChars 是估計值
+    if (fullName.length <= panelWidthChars) { // 如果名字本身就夠短，直接用
+        return fullName;
+    }
+
+    const parts = fullName.split(' ');
+    if (parts.length > 1) { // 至少有姓和名
+        // 嘗試 "F. LastName"
+        let abbreviated = `${parts[0][0]}. ${parts.slice(-1)[0]}`;
+        if (abbreviated.length <= maxLength) {
+            return abbreviated;
+        }
+        // 如果 "F. LastName" 還是太長，嘗試截斷 LastName 部分
+        const lastNamePartLength = maxLength - 3; // 3 for "F. "
+        if (parts.slice(-1)[0].length > lastNamePartLength) {
+             abbreviated = `${parts[0][0]}. ${parts.slice(-1)[0].substring(0, Math.max(1,lastNamePartLength-3))}...`;
+             return abbreviated;
+        }
+        return fullName.substring(0, maxLength - 3) + "..."; // Fallback to simple truncate of full name
+    }
+    // 單詞名字，直接截斷
+    return fullName.substring(0, maxLength - 3) + "...";
+}
+
 function highlightCurrentInningOnScoreboard(currentInning, gameStarted, gameOver, halfInning) {
     if (!DOM_ELEMENTS.scoreboardTable) return;
     DOM_ELEMENTS.scoreboardTable.querySelectorAll('th, td').forEach(cell => cell.classList.remove('current-inning-active'));
@@ -224,52 +248,61 @@ function displayCurrentPlayer(player, isBatter, targetElement) {
         return;
     }
 
-    let statsGridHTML = '';
-    let historyHTML = '';
+    // --- START: MODIFIED PART for h5 content ---
+    
     const roleAbbrev = getPitcherRoleAbbreviation(player.role);
     const roleOrPosition = isBatter ? `(#${player.battingOrder || '?'})` : `(${roleAbbrev})`;
 
+    const nameString = player.name; // Or your abbreviatePlayerName(player.name)
+    const roleUiString = isBatter ? `(#${player.battingOrder || '?'})` : `(${getPitcherRoleAbbreviation(player.role)})`;
+    const ovrUiString = `OVR: ${player.ovr}`;
+    // ... (statsGridHTML logic) ...
+    // ... (historyHTML logic) ...
+    // --- END: MODIFIED PART for h5 content ---
+    let historyHTML = '';
+
+    let statsGridHTML = '';
+
     // UI #3: Stat Number Styling (Black background, colored text)
-    if (isBatter) {
+   if (isBatter) {
         statsGridHTML = `
-            <span class="stat-label">POWER</span><span class="stat-value ${getStatColorClass(player.power)}">${player.power}</span>
+            <span class="stat-label">POW</span><span class="stat-value ${getStatColorClass(player.power)}">${player.power}</span>
             <span class="stat-label">HIT</span><span class="stat-value ${getStatColorClass(player.hitRate)}">${player.hitRate}</span>
-            <span class="stat-label">CONTACT</span><span class="stat-value ${getStatColorClass(player.contact)}">${player.contact}</span>
-            <span class="stat-label">SPEED</span><span class="stat-value ${getStatColorClass(player.speed)}">${player.speed}</span>
+            <span class="stat-label">CON</span><span class="stat-value ${getStatColorClass(player.contact)}">${player.contact}</span>
+            <span class="stat-label">SPD</span><span class="stat-value ${getStatColorClass(player.speed)}">${player.speed}</span>
         `;
         const history = player.atBatHistory || [];
         const historyItems = history.map(item => `<span>${item}</span>`).join(' ');
         historyHTML = `History: ${history.length > 0 ? historyItems : 'N/A'}`;
     }  else { // Pitcher
-        
         const filled = player.currentStamina / player.maxStamina * 100;
-        const empty  = 100 - filled;        // 要遮掉的百分比
-
+        const empty  = 100 - filled;
         statsGridHTML = `
-        <span class="stat-label">POWER</span><span class="stat-value ${getStatColorClass(player.power)}">${player.power}</span>
-        <span class="stat-label">CONTROL</span><span class="stat-value ${getStatColorClass(player.control)}">${player.control}</span>
-        <span class="stat-label">VELOCITY</span><span class="stat-value ${getStatColorClass(player.velocity)}">${player.velocity}</span>
-        <span class="stat-label">TECHNIQUE</span><span class="stat-value ${getStatColorClass(player.technique)}">${player.technique}</span>
-        <span class="stat-label">STAMINA</span>
+        <span class="stat-label">POW</span><span class="stat-value ${getStatColorClass(player.power)}">${player.power}</span>
+        <span class="stat-label">CON</span><span class="stat-value ${getStatColorClass(player.control)}">${player.control}</span>
+        <span class="stat-label">VEL</span><span class="stat-value ${getStatColorClass(player.velocity)}">${player.velocity}</span>
+        <span class="stat-label">TEC</span><span class="stat-value ${getStatColorClass(player.technique)}">${player.technique}</span>
+        <span class="stat-label">STM</span>
         <div class="stamina-bar-container">
-            
             <div class="stamina-empty" style="width:${empty}%"></div>
             <span class="stamina-text">
                 ${player.currentStamina}/${player.maxStamina}
             </span>
         </div>
         `;
-    
     }
 
+    // --- START: UPDATED innerHTML assignment for targetElement ---
     targetElement.innerHTML = `
         <h5>
-            <span class="player-main-name">${player.name}</span>
-            <span>${roleOrPosition} <span class="player-ovr-small">OVR: ${player.ovr}</span></span>
+            <span class="player-main-name">${nameString}</span>
+            <span class="player-role-info">${roleUiString}</span>
+            <span class="player-ovr-info">${ovrUiString}</span>
         </h5>
         <div class="player-stats-detailed">${statsGridHTML}</div>
         ${isBatter ? `<div class="player-history">${historyHTML}</div>` : ''}
     `;
+    // --- END: UPDATED innerHTML assignment ---
 }
 
 function getStaminaGradientColor() {

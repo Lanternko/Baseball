@@ -2,10 +2,10 @@
 export const CONFIG = {
     innings: 9, // Changed from 3 to 9
     baseProbabilities: {
-        strikeout: 0.22,
+        strikeout: 0.21,
         walk: 0.08,
-        homeRun: 0.035,
-        otherHit: 0.165,
+        homeRun: 0.045,
+        otherHit: 0.195,
     },
     stamina: {
         penaltyThreshold1: 0.50,
@@ -38,17 +38,17 @@ export const CONFIG = {
         }
     },
     statNormalization: {
-        pitcherPowerEffectOnSO: 0.03, 
-        velocityEffectOnSO: 0.025,        // 球速 ↑ → 三振 ↑
-        velocityEffectOnHit: -0.02,       // 球速 ↑ → 安打 ↓
-        techniqueEffectOnHR: -0.015,      // 技巧 ↑ → 全壘打 ↓
-        techniqueEffectOnSO: 0.01,        // 技巧 ↑ → 三振微升
-        batterContactEffectOnSO: -0.025,
-        pitcherControlEffectOnWalk: -0.025,
-        batterPowerEffectOnHR: 0.008,
-        pitcherPowerEffectOnHR: -0.003,
-        batterHitRateEffectOnHit: 0.025,
-        pitcherPowerEffectOnHit: -0.02 
+        pitcherPowerEffectOnSO: 0.027,    // UPDATED from 0.03
+        velocityEffectOnSO: 0.02,        // UPDATED from 0.025 (球速 ↑ → 三振 ↑)
+        velocityEffectOnHit: -0.014,      // UPDATED from -0.02  (球速 ↑ → 安打 ↓)
+        techniqueEffectOnHR: -0.015,      // (技巧 ↑ → 全壘打 ↓) - Unchanged for now
+        techniqueEffectOnSO: 0.008,        // (技巧 ↑ → 三振微升) - Unchanged for now
+        batterContactEffectOnSO: -0.027,  // (打擊率 ↑ → 三振 ↓) - This was your recent update, keeping it
+        pitcherControlEffectOnWalk: -0.022, // Unchanged for now
+        batterPowerEffectOnHR: 0.0099,     // Unchanged for now
+        pitcherPowerEffectOnHR: -0.0023,  // UPDATED from -0.003 (Optional, very slight nerf)
+        batterHitRateEffectOnHit: 0.040,  // Unchanged for now
+        pitcherPowerEffectOnHit: -0.015   // UPDATED from -0.02
     },
     probabilityCaps: {
         strikeout: { min: 0.05, max: 0.50 },
