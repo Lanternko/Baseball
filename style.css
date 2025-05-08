@@ -212,104 +212,173 @@ h4 { font-size: 0.9em; color: #345; margin-top: 15px; margin-bottom: 5px; text-a
 
 /* 中等螢幕到手機 - 主要斷點 */
 @media (max-width: 768px) {
-    body {
-        font-size: 13px; /* 可略微調整基礎字體大小 */
-        padding: 5px;    /* 減少 body 邊距 */
-    }
+    /* style.css (在 @media (max-width: 768px) 中) */
 
-    h1 {
-        font-size: 1.5em; /* 調整標題大小 */
-        margin-bottom: 8px;
-    }
-
-    h2 {
-        font-size: 1.1em;
-    }
-
-    .game-layout {
-        flex-direction: column; /* 將主區塊改為垂直堆疊 */
-        align-items: center;    /* 堆疊後居中對齊 */
-        gap: 15px;              /* 調整區塊間距 */
-    }
-
+    /* 隱藏電腦版的 Team Panels */
     .team-panel {
-        width: 95%;             /* 讓資訊面板佔據大部分寬度 */
-        max-width: 450px;       /* 設定最大寬度，避免在稍大平板上過寬 */
+        display: none; /* 在手機上完全隱藏 */
+    }
+
+    /* 主遊戲區域現在是唯一的頂層容器，讓它佔滿寬度 */
+    .main-game-area {
+        width: 100%;
+        padding: 5px; /* 給主區域一點邊距 */
+        box-sizing: border-box;
+        order: initial; /* 移除先前為 team-panel 設定的 order */
+    }
+
+    /* 新增的行動版球員顯示區塊 */
+    .mobile-player-display {
+        border: 1px solid #c8d6e5;
+        border-radius: 6px;
+        padding: 8px; /* 調整 padding */
         margin-bottom: 10px;
-        max-height: none;       /* 允許面板內容增長 */
-        order: initial;         /* 確保在 column 方向時順序正確 */
+        background-color: #fff;
+        /* 與 .current-player-display 相似的樣式，但可以更緊湊 */
+    }
+    .mobile-player-display h5 {
+        margin: 0 0 5px 0;
+        font-size: 1em; /* 略微調整字體大小 */
+        color: #1a3b5d;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e0e6ec;
+        padding-bottom: 3px;
+    }
+    .mobile-player-display .player-main-name {
+        font-size: 1.1em; /* 略微調整字體大小 */
+        font-weight: 600;
+    }
+    .mobile-player-display .player-role,
+    .mobile-player-display .player-ovr-small {
+        font-size: 0.85em; /* 略微調整字體大小 */
+        color: #555;
+        margin-left: 6px;
+    }
+    .mobile-player-display .player-stats-detailed {
+        font-size: 0.8em; /* 略微調整字體大小 */
+        gap: 2px 6px; /* 調整間距 */
+    }
+    .mobile-player-display .stat-label {
+        font-weight: bold;
+        color: #445;
+        text-align: right;
+        font-size: 0.9em; /* 略微調整字體大小 */
+    }
+    .mobile-player-display .stat-value {
+        padding: 1px 4px; /* 調整 padding */
+        font-size: 0.9em; /* 略微調整字體大小 */
+    }
+    .mobile-player-display .player-history { /* 手機版可能不需要顯示打擊歷史 */
+        display: none;
+    }
+    .mobile-player-display .stamina-bar-container { /* 確保投手體力條也適當顯示 */
+        height: 0.8em;
+    }
+    .mobile-player-display .stamina-text {
+        font-size: 0.65em;
     }
 
-    /* 如果希望客隊資訊在最上面，主隊在最下面 */
-    #awayTeamPanel { order: 1; }
-    .main-game-area { order: 2; width: 95%; }
-    #homeTeamPanel { order: 3; }
+    /* 在電腦版上隱藏行動版專用顯示區塊 */
+    @media (min-width: 769px) {
+        .mobile-player-display {
+            display: none;
+        }
+    }
+
+    /* style.css (在 @media (max-width: 768px) 中) */
+
+    .scoreboard-container {
+        margin-bottom: 10px;
+    }
+
+    #scoreboard {
+        margin-top: 5px;
+    }
+
+    /* 隱藏詳細局數的表頭和儲存格 */
+    #scoreboard th:not(:first-child):not(:nth-last-child(1)):not(:nth-last-child(2)):not(:nth-last-child(3)),
+    #scoreboard td:not(:first-child):not(:nth-last-child(1)):not(:nth-last-child(2)):not(:nth-last-child(3)) {
+        display: none;
+    }
+
+    /* 調整剩餘欄位的樣式，使其更像手繪圖 */
+    #scoreboard th, #scoreboard td {
+        padding: 5px;
+        font-size: 0.9em; /* 稍微放大字體，因為欄位變少了 */
+        min-width: 25px;
+    }
+    #scoreboard .team-name {
+        min-width: 60px; /* 隊名可以寬一點 */
+        font-weight: bold;
+    }
+    #scoreboard .total-runs,
+    #scoreboard .total-hits,
+    #scoreboard .total-errors {
+        min-width: 30px;
+        font-weight: bold;
+    }
+
+    /* 移除 scoreboard-container 的標題 "Scoreboard"，如果需要的話 */
+    .scoreboard-container h2 {
+        display: none; /* 或者可以保留，看您的偏好 */
+    }
+    /* style.css (在 @media (max-width: 768px) 中，根據需要調整或覆蓋先前的規則) */
+
+    .field-display {
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .field-header { /* 局數和出局數 */
+        font-size: 1.1em; /* 可以稍微大一點 */
+        padding-bottom: 5px;
+        margin-bottom: 10px;
+    }
+
+    .field-display .diamond-area {
+        width: 150px; /* 根據空間調整 */
+        height: 150px;
+        margin: 15px auto 10px auto; /* 調整邊距 */
+    }
+    .field-display .diamond-area .base {
+        width: 40px;
+        height: 40px;
+    }
+    /* 跑者姓名的位置可能需要重新微調 */
+    #runnerName1B { top: calc(50% - 8px); right: -60px; }
+    #runnerName2B { top: -28px; }
+    #runnerName3B { top: calc(50% - 8px); left: -60px; }
 
 
-    .current-player-display h5 {
+    #at-bat-outcome {
+        margin-top: 10px;
+        padding: 8px;
+    }
+    #at-bat-outcome h2 { /* "Last Play:" 標題 */
         font-size: 1em;
+        margin-bottom: 3px;
     }
-    .current-player-display .player-main-name {
-        font-size: 1.15em;
-    }
-    .current-player-display .player-stats-detailed {
-        font-size: 0.85em;
-        gap: 2px 8px; /* 縮小能力值標籤與數值的間距 */
-    }
-    .current-player-display .stat-value {
-        padding: 1px 4px; /* 縮小能力值背景的 padding */
+    #outcome-text {
+        font-size: 0.95em;
+        min-height: 18px;
     }
 
-    .team-panel li {
-        font-size: 0.8em;
-        padding: 5px 2px;
+    .game-controls {
+        margin-top: 15px;
+    }
+    .game-controls button {
+        padding: 12px 25px;
+        font-size: 1.1em; /* 按鈕可以顯眼一點 */
+        width: 80%;
+        max-width: 280px;
     }
 }
 
 /* style.css (繼續追加於 @media (max-width: 768px) 內部) */
 
-.scoreboard-container {
-    padding: 8px; /* 減少計分板容器內邊距 */
-}
 
-#scoreboard th, #scoreboard td {
-    padding: 4px;       /* 減少儲存格內邊距 */
-    font-size: 0.75em;  /* 縮小計分板字體 */
-    min-width: 18px;    /* 調整最小寬度 */
-}
-#scoreboard .team-name {
-    min-width: 50px;
-}
-    #scoreboard .total-runs,
-    #scoreboard .total-hits,
-    #scoreboard .total-errors {
-    min-width: 25px;
-}
-
-
-.field-display {
-    padding: 10px; /* 減少球場顯示區內邊距 */
-}
-
-.field-header {
-    font-size: 1em;   /* 調整局數/出局數字體 */
-    margin-bottom: 12px;
-}
-.out-light {
-    width: 18px; height: 18px; /* 縮小出局燈 */
-}
-
-.field-display .diamond-area {
-    width: 160px;  /* 縮小壘包區域 */
-    height: 160px;
-    margin: 20px auto 15px auto;
-}
-
-.field-display .diamond-area .base {
-    width: 45px; /* 縮小壘包本身 */
-    height: 45px;
-    font-size: 0.8em;
-}
 
 /* 調整跑者名稱的相對位置 */
 #runnerName1B { top: calc(50% - 10px); right: -65px; font-size: 0.75em; padding: 1px 3px;}

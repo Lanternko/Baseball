@@ -50,6 +50,10 @@ export const DOM_ELEMENTS = {
     homeCurrentPlayerDisplay: document.getElementById('homeCurrentPlayerDisplay'),
     awayTeamLineupList: document.getElementById('awayTeamLineupList'),
     homeTeamLineupList: document.getElementById('homeTeamLineupList'),
+
+    // Mobile Displays
+    mobileBatterDisplay: document.getElementById('mobileBatterDisplay'),
+    mobilePitcherDisplay: document.getElementById('mobilePitcherDisplay'),
 };
 
 // --- UI Initialization ---
@@ -318,42 +322,54 @@ export function triggerScoreFlash(runsScored) {
 export function updateAllDisplays(gameState, gameTeams) {
     if (!gameState || !gameTeams) { console.error("Missing gameState or gameTeams"); return; }
 
+    const isMobileView = window.innerWidth <= 768; // 簡單的寬度判斷
+
     // Update Inning/Outs/Bases/Scoreboard
     updateInningDisplay(gameState.halfInning, gameState.currentInning, gameState.gameStarted, gameState.gameOver);
     updateOutsDisplay(gameState.outs);
-    updateBasesDisplay(gameState.bases, gameState.activePitcher); // Pass pitcher for mound name
-    updateScoreboard(gameTeams, gameState.currentInning, gameState.halfInning, gameState.outs, gameState.gameStarted, gameState.gameOver);
+    updateBasesDisplay(gameState.bases, gameState.activePitcher);
+    updateScoreboard(gameTeams, gameState.currentInning, gameState.halfInning, gameState.outs, gameState.gameStarted, gameState.gameOver); // Scoreboard 更新邏輯不變，CSS 會處理顯示
 
-    // Determine teams and current batter
     const battingTeamKey = gameState.halfInning === 'top' ? 'away' : 'home';
     const fieldingTeamKey = gameState.halfInning === 'top' ? 'home' : 'away';
     const battingTeam = gameTeams[battingTeamKey];
-    const currentBatterForDisplay = gameState.activeBatter; // Batter currently up
+    const currentBatterForDisplay = gameState.activeBatter;
+    const currentPitcherForDisplay = gameState.activePitcher;
 
-    // Add batting order to the current batter object for display
     if (currentBatterForDisplay && battingTeam && battingTeam.batters) {
         const currentBatterActualIndex = battingTeam.batters.findIndex(b => b === currentBatterForDisplay);
         currentBatterForDisplay.battingOrder = (currentBatterActualIndex !== -1) ? currentBatterActualIndex + 1 : '?';
     }
 
-    // Update Emphasized Player Displays
-    if (battingTeamKey === 'away') {
-        displayCurrentPlayer(currentBatterForDisplay, true, DOM_ELEMENTS.awayCurrentPlayerDisplay);
-        displayCurrentPlayer(gameState.activePitcher, false, DOM_ELEMENTS.homeCurrentPlayerDisplay);
-        // UI #1: Set panel background colors
-        DOM_ELEMENTS.awayTeamPanel.className = 'team-panel batting-team';
-        DOM_ELEMENTS.homeTeamPanel.className = 'team-panel fielding-team';
-    } else {
-        displayCurrentPlayer(currentBatterForDisplay, true, DOM_ELEMENTS.homeCurrentPlayerDisplay);
-        displayCurrentPlayer(gameState.activePitcher, false, DOM_ELEMENTS.awayCurrentPlayerDisplay);
-        // UI #1: Set panel background colors
-        DOM_ELEMENTS.homeTeamPanel.className = 'team-panel batting-team';
-        DOM_ELEMENTS.awayTeamPanel.className = 'team-panel fielding-team';
-    }
+    if (isMobileView) {
+        // 手機版面：更新到 mobile display divs
+        if (DOM_ELEMENTS.mobileBatterDisplay) {
+            displayCurrentPlayer(currentBatterForDisplay, true, DOM_ELEMENTS.mobileBatterDisplay);
+        }
+        if (DOM_ELEMENTS.mobilePitcherDisplay) {
+            displayCurrentPlayer(currentPitcherForDisplay, false, DOM_ELEMENTS.mobilePitcherDisplay);
+        }
+        // 確保電腦版的 player display 是空的或隱藏的 (CSS 應該已處理隱藏)
+        if (DOM_ELEMENTS.awayCurrentPlayerDisplay) DOM_ELEMENTS.awayCurrentPlayerDisplay.innerHTML = '';
+        if (DOM_ELEMENTS.homeCurrentPlayerDisplay) DOM_ELEMENTS.homeCurrentPlayerDisplay.innerHTML = '';
 
-    // Update Lineup Lists (highlighting the CURRENT batter)
-    displaySingleTeamLineupList('away', gameTeams, gameState.halfInning === 'top' ? currentBatterForDisplay : null);
-    displaySingleTeamLineupList('home', gameTeams, gameState.halfInning === 'bottom' ? currentBatterForDisplay : null);
+    } else {
+        // 電腦版面：使用原來的 team panel displays
+        if (battingTeamKey === 'away') {
+            displayCurrentPlayer(currentBatterForDisplay, true, DOM_ELEMENTS.awayCurrentPlayerDisplay);
+            displayCurrentPlayer(currentPitcherForDisplay, false, DOM_ELEMENTS.homeCurrentPlayerDisplay);
+            if (DOM_ELEMENTS.awayTeamPanel) DOM_ELEMENTS.awayTeamPanel.className = 'team-panel batting-team';
+            if (DOM_ELEMENTS.homeTeamPanel) DOM_ELEMENTS.homeTeamPanel.className = 'team-panel fielding-team';
+        } else {
+            displayCurrentPlayer(currentBatterForDisplay, true, DOM_ELEMENTS.homeCurrentPlayerDisplay);
+            displayCurrentPlayer(currentPitcherForDisplay, false, DOM_ELEMENTS.awayCurrentPlayerDisplay);
+            if (DOM_ELEMENTS.homeTeamPanel) DOM_ELEMENTS.homeTeamPanel.className = 'team-panel batting-team';
+            if (DOM_ELEMENTS.awayTeamPanel) DOM_ELEMENTS.awayTeamPanel.className = 'team-panel fielding-team';
+        }
+        // 更新 Lineup Lists (手機版不需要)
+        displaySingleTeamLineupList('away', gameTeams, gameState.halfInning === 'top' ? currentBatterForDisplay : null);
+        displaySingleTeamLineupList('home', gameTeams, gameState.halfInning === 'bottom' ? currentBatterForDisplay : null);
+    }
 }
 
 
