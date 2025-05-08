@@ -1,0 +1,210 @@
+/* General Body and Layout */
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.5; margin: 0; padding: 10px; background-color: #eef1f5; color: #333; display: flex; flex-direction: column; align-items: center; font-size: 14px; min-height: 100vh; }
+h1 { color: #1a3b5d; text-align: center; margin-top: 5px; margin-bottom: 10px; font-size: 1.7em; }
+h2 { color: #1a3b5d; text-align: center; margin-top: 8px; margin-bottom: 8px; font-size: 1.2em; }
+h3 { font-size: 1.1em; color: #1a3b5d; margin-top: 5px; margin-bottom: 8px; border-bottom: 1px solid #d0d9e2; padding-bottom: 5px; text-align: center; }
+h4 { font-size: 0.9em; color: #345; margin-top: 15px; margin-bottom: 5px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.game-layout { display: flex; justify-content: space-between; width: 100%; max-width: 1500px; margin: 0 auto; gap: 20px; align-items: flex-start; }
+
+/* Side Panels */
+.team-panel {
+    width: 350px; padding: 10px 15px; background-color: #fdfdff; border: 1px solid #dde; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.08); height: fit-content; max-height: calc(100vh - 40px); overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+.team-panel.batting-team {
+    background-color: #f0f8ff;
+    border-color: #c3dafa;
+}
+.team-panel.fielding-team {
+    background-color: #ffffff;
+    border-color: #e0e0e0;
+}
+.team-panel.fielding-team .current-player-display {
+    background-color: #e7f3ff;
+    border-color: #b8d4f8;
+}
+
+/* Emphasized Current Player Display */
+.current-player-display { border: 1px solid #c8d6e5; border-radius: 6px; padding: 12px; margin-bottom: 10px; min-height: 110px; background-color: #fff; transition: background-color 0.3s ease, border-color 0.3s ease; }
+.current-player-display h5 { margin: 0 0 8px 0; font-size: 1.1em; color: #1a3b5d; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c8d6e5; padding-bottom: 5px; }
+.current-player-display .player-main-name { font-size: 1.3em; font-weight: 600; }
+.current-player-display .player-role,
+.current-player-display .player-ovr-small { font-size: 0.9em; font-weight: normal; color: #555; margin-left: 8px; }
+
+.current-player-display .player-stats-detailed { font-size: 0.9em; line-height: 1.6; color: #333; margin-bottom: 8px; font-weight: 500; display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; align-items: center; }
+.current-player-display .stat-label { font-weight: bold; color: #445; text-align: right; font-size: 0.95em; }
+
+.current-player-display .stat-value {
+    font-weight: bold;
+    text-align: center;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background-color: #333;
+    color: #fff;
+    min-width: 25px;
+    display: inline-block;
+}
+.stat-value.stat-low { color: #aaa; }
+.stat-value.stat-medium { color: #a5d6a7; }
+.stat-value.stat-high { color: #fff59d; }
+.stat-value.stat-elite { color: #ef9a9a; }
+
+.current-player-display .player-history {
+    font-size: 0.85em;
+    color: #5a677a;
+    font-style: italic;
+    margin-top: 8px;
+    border-top: 1px dashed #c8d6e5;
+    padding-top: 8px;
+    max-height: none;
+    overflow-y: visible;
+    line-height: 1.4;
+}
+.current-player-display .player-history span { margin-right: 5px; padding: 1px 3px; background-color: #f0f4f8; border-radius: 3px; border: 1px solid #dde; }
+
+/* Lineup List */
+.team-panel ul { list-style-type: none; padding: 0; margin: 0; }
+.team-panel li { font-size: 0.85em; padding: 6px 3px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; line-height: 1.4; transition: background-color 0.2s ease;}
+.team-panel li:last-child { border-bottom: none; }
+.team-panel li.current-batter-in-lineup { background-color: #dceaff; font-weight: bold; }
+.team-panel li .player-info-block { display: flex; flex-direction: column; flex-grow: 1; margin-right: 10px; }
+.team-panel .player-name-ovr { display: flex; justify-content: space-between; width: 100%; }
+.team-panel .player-name { flex-grow: 1; margin-right: 5px; }
+.team-panel .player-ovr { margin-left: 8px; color: #0069d9; font-size: 0.95em; font-weight: bold; flex-shrink: 0; }
+.team-panel .batter-score { font-size: 0.9em; color: #334; font-weight: bold; flex-shrink: 0; min-width: 35px; text-align: right; }
+.team-panel .player-stats-detail { display: none; }
+
+/* Main Game Area */
+.main-game-area { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+
+/* Scoreboard */
+.scoreboard-container { width: 100%; max-width: 900px; background-color: #fff; padding: 10px 15px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.06); margin-bottom: 15px; text-align: center; overflow-x: auto; }
+#scoreboard { width: 100%; border-collapse: collapse; margin-top: 8px; }
+#scoreboard th, #scoreboard td { border: 1px solid #e0e6ec; padding: 5px; text-align: center; font-size: 0.8em; min-width: 25px; white-space: nowrap; }
+#scoreboard th { background-color: #f0f4f8; color: #1a3b5d; font-weight: bold; }
+#scoreboard .team-name { text-align: left; font-weight: bold; background-color: #f8f9fa; min-width: 80px; }
+#scoreboard .total-runs, #scoreboard .total-hits, #scoreboard .total-errors { font-weight: bold; background-color: #e9ecef; min-width: 30px; }
+#scoreboard th.current-inning-active,
+#scoreboard td.current-inning-active { background-color: #dceaff !important; font-weight: bold; }
+
+/* Field Display */
+.field-display { width: 100%; max-width: 600px; background-color: #fff; padding: 15px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.06); margin-bottom: 15px; text-align: center; position: relative; }
+.field-header { display: flex; justify-content: space-around; align-items: center; margin-bottom: 15px; font-weight: bold; font-size: 1.2em; color: #1a3b5d; padding-bottom: 8px; border-bottom: 1px solid #ddd; }
+.field-header div { flex-basis: 45%; text-align: center; }
+
+#inningDisplay { display: flex; align-items: center; justify-content: center; }
+.inning-indicator { display: inline-block; width: 0; height: 0; margin-right: 5px; border-left: 7px solid transparent; border-right: 7px solid transparent; transition: border-color 0.3s ease; }
+.inning-indicator.top { border-bottom: 12px solid #3498db; }
+.inning-indicator.bottom { border-top: 12px solid #e74c3c; }
+.inning-number { margin-left: 3px; }
+
+#outsDisplay { display: flex; align-items: center; justify-content: center; }
+.out-light { display: inline-block; width: 20px; height: 20px; border-radius: 50%; background-color: #ccc; margin: 0 4px; border: 1px solid #aaa; box-shadow: inset 0 0 4px rgba(0,0,0,0.2); transition: background-color 0.3s ease, box-shadow 0.3s ease; }
+.out-light.active { background-color: #e74c3c; border-color: #c0392b; box-shadow: inset 0 0 4px rgba(0,0,0,0.1), 0 0 10px rgba(231, 76, 60, 0.8); }
+
+#pitcherNameBelowBases {
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.8em;
+    font-weight: bold;
+    color: #555;
+    white-space: nowrap;
+    display: none;
+}
+
+.field-display .diamond-area { position: relative; width: 200px; height: 200px; margin: 25px auto 20px auto; }
+.field-display .diamond-area .base {
+    position: absolute; width: 55px; height: 55px; border: 2px solid #888; background-color: #fdfdff; color: #444; font-weight: bold; display: flex; justify-content: center; align-items: center; font-size: 0.9em; box-shadow: 2px 2px 4px rgba(0,0,0,0.15); transform-origin: center center;
+    transform: rotate(-45deg);
+}
+.field-display .diamond-area .base.occupied-base {
+    background-color: #5890b3;
+}
+.base .base-label {
+    display: inline-block;
+    transform: rotate(45deg);
+}
+.base-first { top: 50%; right: 0; transform: translate(50%, -50%) rotate(-45deg); }
+.base-second { top: 0; left: 37%; transform: translate(-50%, -50%) rotate(-45deg); }
+.base-third { top: 50%; left: 0; transform: translate(-50%, -50%) rotate(-45deg); }
+
+
+/* Stamina Bar Styling - UPDATED */
+/* 外層：放完整漸層 */
+.stamina-bar-container{
+    position:relative;
+    width:100%;
+    height:1em;
+    border-radius:4px;
+    overflow:hidden;
+    background:linear-gradient(
+        to right,
+        red 0%,
+        #ffe100 30%,
+        #cbf817 50%,
+        rgb(29, 255, 29) 100%
+    );
+    border:1px solid #bbb;
+}
+
+/* 內層：灰色遮罩，寬度 = 耗盡百分比 */
+.stamina-empty{          /* ← 原本的 .stamina-bar 可以改這名字 */
+    position:absolute;
+    right:0;             /* 從右邊開始遮 */
+    top:0;
+    height:100%;
+    background:#d8d8d8;
+    transition:width .3s ease;
+}
+
+/* 文字保持原來設定即可 */
+.stamina-text{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    font-size:.75em;
+    color:#000;
+    pointer-events:none;
+}
+/* End of Stamina Bar Styling */
+
+.field-display .runner-name { position: absolute; font-size: 0.85em; font-weight: bold; color: #0056b3; background-color: rgba(230, 240, 255, 0.9); padding: 2px 5px; border-radius: 4px; white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.1); display: none; z-index: 5; }
+#runnerName1B { top: calc(50% - 10px); right: -85px; }
+#runnerName2B { top: -35px; left: 50%; transform: translateX(-50%); }
+#runnerName3B { top: calc(50% - 10px); left: -85px; }
+
+.score-flash {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3em;
+    font-weight: bold;
+    color: gold;
+    text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+    opacity: 0;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    pointer-events: none;
+    z-index: 100;
+}
+.score-flash.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.5);
+}
+
+#at-bat-outcome { width: 100%; max-width: 700px; margin-top: 15px; padding: 12px; }
+#outcome-text { font-size: 1.1em; min-height: 25px; }
+
+.game-controls { margin-top: 20px; width: 100%; max-width: 700px; position: relative; text-align: center; }
+.game-controls button { padding: 14px 30px; font-size: 1.2em; margin: 5px; min-width: 150px; }
+#nextPlayButton.simulating { background-color: #ffc107; color: #333; cursor: default; }
+
+.outcome-neutral { color: #777; }
+.outcome-strikeout { color: black; font-weight: bold; }
+.outcome-out { color: black; font-style: italic; }
+.outcome-homerun { color: #007bff; font-size: 1.3em; min-height: 30px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+.outcome-single, .outcome-double, .outcome-triple { color: deepskyblue; font-weight: bold; }
+.outcome-walk, .outcome-walks { color: royalblue; }
