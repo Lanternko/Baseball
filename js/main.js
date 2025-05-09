@@ -5,7 +5,7 @@ import { DOM_ELEMENTS, initializeUI, updateAllDisplays, updateOutcomeText } from
 import { initializeGame, playNextAtBat, getGameState, changeHalfInning, endGame } from './gameLogic.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const { awayTeamId, homeTeamId } = getDefaultTeamIds();
+    const { awayTeamId, homeTeamId } = getDefaultTeamIds(); // 確保 DOM_ELEMENTS 已被 ui.js 初始化
 
     let currentTeamsData = prepareTeamsData(awayTeamId, homeTeamId);
     let currentTeamRecords = loadData(TEAM_RECORDS_KEY, {});
@@ -133,6 +133,29 @@ document.addEventListener('DOMContentLoaded', () => {
             enableGameControls(getGameState().gameOver);
         }
     }
+
+    // 新增 Enter 鍵事件監聽器
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            // 防止在焦點於按鈕時觸發兩次點擊
+            if (document.activeElement && (document.activeElement.tagName === 'BUTTON' || document.activeElement.tagName === 'A')) {
+                 // 如果焦點在按鈕上，讓按鈕的默認 Enter 行為執行，或者我們可以選擇阻止它並自己處理
+                 // 為了簡化，如果焦點在按鈕上，我們這裡可以 return，讓按鈕自己處理 Enter
+                 // 但如果希望 Enter 總是執行我們的邏輯，則移除此 return，並在下方 click() 後 event.preventDefault()
+                 return; 
+            }
+            event.preventDefault(); // 阻止例如表單提交等默認行為
+
+            const gameState = getGameState(); // 獲取當前遊戲狀態
+
+            if (DOM_ELEMENTS.startGameButton && DOM_ELEMENTS.startGameButton.style.display !== 'none') {
+                DOM_ELEMENTS.startGameButton.click();
+            } else if (DOM_ELEMENTS.nextPlayButton && DOM_ELEMENTS.nextPlayButton.style.display !== 'none' && !DOM_ELEMENTS.nextPlayButton.disabled && !gameState.gameOver) {
+                DOM_ELEMENTS.nextPlayButton.click();
+            }
+            // 可以考慮加入對其他模擬按鈕的判斷，但題目主要提到 "current simulation option" 應該是指 "Next Batter"
+        }
+    });
 
     DOM_ELEMENTS.startGameButton.addEventListener('click', () => {
         stopLongPressSimulation();
@@ -350,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const resetButton = document.createElement('button');
     resetButton.id = 'resetDataButton';
-    resetButton.textContent = 'Reset All Saved Stats';
+    resetButton.textContent = 'Reset';
     resetButton.style.position = 'fixed';
     resetButton.style.top = '10px';
     resetButton.style.right = '10px';
