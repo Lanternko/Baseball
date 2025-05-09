@@ -4,8 +4,8 @@ export const CONFIG = {
     baseProbabilities: {
         strikeout: 0.21,
         walk: 0.08,
-        homeRun: 0.045,
-        otherHit: 0.195,
+        homeRun: 0.04,
+        otherHit: 0.265,
     },
     stamina: {
         penaltyThreshold1: 0.50,
@@ -46,12 +46,13 @@ export const CONFIG = {
         velocityEffectOnHit: -0.015,
         techniqueEffectOnHR: -0.013,
         techniqueEffectOnSO: 0.008, // Slight increase with technique
-        batterContactEffectOnSO: -0.033,
         pitcherControlEffectOnWalk: -0.023,
-        batterPowerEffectOnHR: 0.015,
         pitcherPowerEffectOnHR: -0.0023,
-        batterHitRateEffectOnHit: 0.031,
-        pitcherPowerEffectOnHit: -0.015
+        pitcherPowerEffectOnHit: -0.015,
+        
+        batterContactEffectOnSO: -0.033,
+        batterPowerEffectOnHR: 0.017,
+        batterHitRateEffectOnHit: 0.022
     },
     probabilityCaps: {
         strikeout: { min: 0.05, max: 0.50 },

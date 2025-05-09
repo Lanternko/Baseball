@@ -5,9 +5,7 @@ export const DOM_ELEMENTS = {
     // Game Controls
     startGameButton: document.getElementById('startGameButton'),
     nextPlayButton: document.getElementById('nextPlayButton'),
-    // Simulation Controls Container
-    simulationControlsContainer: document.querySelector('.simulation-controls'), // Get the container
-    // Simulation Buttons
+    simulationControlsContainer: document.querySelector('.simulation-controls'),
     simInningButton: document.getElementById('simInningButton'),
     simGameButton: document.getElementById('simGameButton'),
     sim10GamesButton: document.getElementById('sim10GamesButton'),
@@ -62,22 +60,24 @@ export const DOM_ELEMENTS = {
     mobileBatterDisplay: document.getElementById('mobileBatterDisplay'),
     mobilePitcherDisplay: document.getElementById('mobilePitcherDisplay'),
 
-    // Standings Spans
-    awayTeamRecordSpan: document.getElementById('awayTeamRecord'),
-    homeTeamRecordSpan: document.getElementById('homeTeamRecord'),
+    // Standings Spans (will be re-acquired in initializeUI)
+    awayTeamRecordSpan: null,
+    homeTeamRecordSpan: null,
 };
 
-// --- UI Initialization ---
 export function initializeUI(gameTeams, teamRecords) {
-    if (DOM_ELEMENTS.awayTeamScoreboardName && gameTeams.away) DOM_ELEMENTS.awayTeamScoreboardName.textContent = gameTeams.away.name;
-    if (DOM_ELEMENTS.homeTeamScoreboardName && gameTeams.home) DOM_ELEMENTS.homeTeamScoreboardName.textContent = gameTeams.home.name;
     if (DOM_ELEMENTS.awayTeamNameDisplayElement && gameTeams.away) {
-        DOM_ELEMENTS.awayTeamNameDisplayElement.childNodes[0].nodeValue = gameTeams.away.name + " ";
+        DOM_ELEMENTS.awayTeamNameDisplayElement.innerHTML = `${gameTeams.away.name} <span class="team-record" id="awayTeamRecord">(0-0)</span>`;
     }
     if (DOM_ELEMENTS.homeTeamNameDisplayElement && gameTeams.home) {
-        DOM_ELEMENTS.homeTeamNameDisplayElement.childNodes[0].nodeValue = gameTeams.home.name + " ";
+        DOM_ELEMENTS.homeTeamNameDisplayElement.innerHTML = `${gameTeams.home.name} <span class="team-record" id="homeTeamRecord">(0-0)</span>`;
     }
+    DOM_ELEMENTS.awayTeamRecordSpan = document.getElementById('awayTeamRecord');
+    DOM_ELEMENTS.homeTeamRecordSpan = document.getElementById('homeTeamRecord');
 
+    if (DOM_ELEMENTS.awayTeamScoreboardName && gameTeams.away) DOM_ELEMENTS.awayTeamScoreboardName.textContent = gameTeams.away.name;
+    if (DOM_ELEMENTS.homeTeamScoreboardName && gameTeams.home) DOM_ELEMENTS.homeTeamScoreboardName.textContent = gameTeams.home.name;
+    
     if(DOM_ELEMENTS.inningIndicator) DOM_ELEMENTS.inningIndicator.className = 'inning-indicator';
     if(DOM_ELEMENTS.inningNumber) DOM_ELEMENTS.inningNumber.textContent = '-';
     if(DOM_ELEMENTS.outLights) DOM_ELEMENTS.outLights.forEach(light => light.classList.remove('active'));
@@ -85,9 +85,14 @@ export function initializeUI(gameTeams, teamRecords) {
 
     const awayCells = DOM_ELEMENTS.awayTeamScoreCells;
     const homeCells = DOM_ELEMENTS.homeTeamScoreCells;
-    for (let i = 1; i <= CONFIG.innings; i++) {
-        if (awayCells?.[i]) awayCells[i].textContent = '-';
-        if (homeCells?.[i]) homeCells[i].textContent = '-';
+    for (let i = 0; i < CONFIG.innings; i++) {
+        const cellIndexInNodeListOfChildren = i + 1;
+        if (awayCells && awayCells[cellIndexInNodeListOfChildren]) {
+            awayCells[cellIndexInNodeListOfChildren].textContent = '-';
+        }
+        if (homeCells && homeCells[cellIndexInNodeListOfChildren]) {
+            homeCells[cellIndexInNodeListOfChildren].textContent = '-';
+        }
     }
     if (DOM_ELEMENTS.awayTeamTotalRunsCell) DOM_ELEMENTS.awayTeamTotalRunsCell.textContent = '0';
     if (DOM_ELEMENTS.homeTeamTotalRunsCell) DOM_ELEMENTS.homeTeamTotalRunsCell.textContent = '0';
@@ -117,20 +122,16 @@ export function initializeUI(gameTeams, teamRecords) {
     if(DOM_ELEMENTS.awayTeamPanel) DOM_ELEMENTS.awayTeamPanel.className = 'team-panel';
     if(DOM_ELEMENTS.homeTeamPanel) DOM_ELEMENTS.homeTeamPanel.className = 'team-panel';
     
-    // Hide simulation controls initially
     if (DOM_ELEMENTS.simulationControlsContainer) {
         DOM_ELEMENTS.simulationControlsContainer.style.display = 'none';
     }
-
-
-    updateStandingsDisplay(teamRecords);
+    updateStandingsDisplay(teamRecords, gameTeams.away?.id, gameTeams.home?.id);
 }
 
 function getOvrColorClass(ovr) {
     if (ovr === undefined || ovr === null) return '';
     const thresholds = CONFIG.ovrColorSettings.thresholds;
     const classes = CONFIG.ovrColorSettings.classes;
-
     if (ovr <= thresholds.gray) return classes.gray;
     if (ovr <= thresholds.blue) return classes.blue;
     if (ovr <= thresholds.red) return classes.red;
@@ -158,16 +159,14 @@ function abbreviatePlayerName(fullName, maxLength = 16, panelWidthChars = 15) {
 function highlightCurrentInningOnScoreboard(currentInning, gameStarted, gameOver, halfInning) {
     if (!DOM_ELEMENTS.scoreboardTable) return;
     DOM_ELEMENTS.scoreboardTable.querySelectorAll('thead th, tbody td').forEach(cell => cell.classList.remove('current-inning-active'));
-
     if (gameStarted && !gameOver && currentInning >= 1 && currentInning <= CONFIG.innings) {
-        const inningColumnIndex = currentInning;
+        const inningColumnIndex = currentInning; 
         const headers = DOM_ELEMENTS.scoreboardTable.querySelectorAll('thead th');
-        if (headers && headers.length > inningColumnIndex) {
-            headers[inningColumnIndex].classList.add('current-inning-active');
-        }
+        if (headers && headers.length > inningColumnIndex) headers[inningColumnIndex].classList.add('current-inning-active');
+        
         const activeRowCells = halfInning === 'top' ? DOM_ELEMENTS.awayTeamScoreCells : DOM_ELEMENTS.homeTeamScoreCells;
-        if (activeRowCells && activeRowCells.length > inningColumnIndex) {
-            activeRowCells[inningColumnIndex].classList.add('current-inning-active');
+        if (activeRowCells && activeRowCells.length > inningColumnIndex) { 
+             activeRowCells[inningColumnIndex].classList.add('current-inning-active');
         }
     }
 }
@@ -182,39 +181,61 @@ export function updateInningDisplay(halfInning, currentInning, gameStarted, game
 
 export function updateOutsDisplay(outs) {
     if (!DOM_ELEMENTS.outLights) return;
-    DOM_ELEMENTS.outLights.forEach((light, index) => {
-        light.classList.toggle('active', index < outs);
-    });
+    DOM_ELEMENTS.outLights.forEach((light, index) => light.classList.toggle('active', index < outs));
 }
 
 export function updateScoreboard(gameTeams, currentInning, halfInning, outs, gameStarted, gameOver) {
-    if (!gameTeams || !gameTeams.away || !gameTeams.home) { console.error("Team data missing for scoreboard update."); return; }
+    if (!gameTeams || !gameTeams.away || !gameTeams.home) {
+        console.error("Team data missing for scoreboard update.");
+        return;
+    }
+    // console.log("Updating scoreboard. Game Over:", gameOver, "Current Inning:", currentInning, "Half:", halfInning, "Outs:", outs);
+    // console.log("Away Scores:", gameTeams.away.scorePerInning, "Total:", gameTeams.away.totalRuns);
+    // console.log("Home Scores:", gameTeams.home.scorePerInning, "Total:", gameTeams.home.totalRuns);
+
+
     const awayTeamData = gameTeams.away;
     const homeTeamData = gameTeams.home;
     const awayCells = DOM_ELEMENTS.awayTeamScoreCells;
     const homeCells = DOM_ELEMENTS.homeTeamScoreCells;
-    if (!awayCells || !homeCells) { console.error("Scoreboard cells not found."); return; }
 
-    const shouldShowDash = (teamData, inningIndex) => {
-        const inningNum = inningIndex + 1;
-        if (!gameStarted || inningNum > currentInning) return true;
-        if (inningNum === currentInning) {
-            if (teamData === awayTeamData && halfInning === 'top' && !gameOver) return true;
-            if (teamData === homeTeamData && halfInning === 'bottom' && outs < 3 && !gameOver) return true;
-            if (teamData === homeTeamData && halfInning === 'top' && !gameOver) return true;
+    if (!awayCells || !homeCells || awayCells.length === 0 || homeCells.length === 0) {
+        console.error("Scoreboard cells not found or empty.");
+        return;
+    }
+
+    // Determines if a dash '-' or the actual score should be shown for an inning cell
+    const shouldShowDashForInning = (teamIsAway, inningIdx) => {
+        const inningNum = inningIdx + 1; // 1-based inning
+
+        if (gameOver) return false; // If game is over, always show score, not dash
+        if (!gameStarted) return true; // If game hasn't started, show dash
+
+        if (inningNum < currentInning) return false; // Past inning, show score
+
+        if (inningNum > currentInning) return true; // Future inning, show dash
+
+        // Current inning (inningNum === currentInning)
+        if (teamIsAway) { // Away team
+            // Show dash if it's top of the current inning AND inning is not yet complete (outs < 3)
+            return halfInning === 'top' && outs < 3;
+        } else { // Home team
+            // Show dash if it's still the top of the current inning (home team hasn't batted)
+            // OR if it's bottom of the current inning AND inning is not yet complete (outs < 3)
+            return halfInning === 'top' || (halfInning === 'bottom' && outs < 3);
         }
-        return false;
     };
 
     for (let i = 0; i < CONFIG.innings; i++) {
-        const cellIndex = i + 1;
-        if (awayCells[cellIndex]) {
-            const runs = awayTeamData.scorePerInning[i];
-            awayCells[cellIndex].textContent = shouldShowDash(awayTeamData, i) ? '-' : (runs ?? 0);
+        const cellDisplayIndex = i + 1; // Scoreboard cells are 1-indexed after team name
+
+        if (awayCells[cellDisplayIndex]) {
+            const runsInInning = awayTeamData.scorePerInning[i];
+            awayCells[cellDisplayIndex].textContent = shouldShowDashForInning(true, i) ? '-' : (runsInInning ?? 0);
         }
-        if (homeCells[cellIndex]) {
-            const runs = homeTeamData.scorePerInning[i];
-            homeCells[cellIndex].textContent = shouldShowDash(homeTeamData, i) ? '-' : (runs ?? 0);
+        if (homeCells[cellDisplayIndex]) {
+            const runsInInning = homeTeamData.scorePerInning[i];
+            homeCells[cellDisplayIndex].textContent = shouldShowDashForInning(false, i) ? '-' : (runsInInning ?? 0);
         }
     }
 
@@ -227,6 +248,7 @@ export function updateScoreboard(gameTeams, currentInning, halfInning, outs, gam
 
     highlightCurrentInningOnScoreboard(currentInning, gameStarted, gameOver, halfInning);
 }
+
 
 export function updateBasesDisplay(bases, activePitcher) {
     const runnerNameElements = [DOM_ELEMENTS.runnerName1B, DOM_ELEMENTS.runnerName2B, DOM_ELEMENTS.runnerName3B];
@@ -267,20 +289,13 @@ function getPitcherRoleAbbreviation(role) {
 function displayCurrentPlayer(player, isBatter, targetElement) {
     if (!targetElement) return;
     targetElement.innerHTML = '';
-
-    Object.values(CONFIG.ovrColorSettings.classes).forEach(className => {
-        targetElement.classList.remove(className);
-    });
-
+    Object.values(CONFIG.ovrColorSettings.classes).forEach(className => targetElement.classList.remove(className));
     if (!player) {
         targetElement.innerHTML = `<p style="text-align:center; color:#777; font-style:italic;">${isBatter ? 'Batter' : 'Pitcher'} info not available.</p>`;
         return;
     }
-
     const ovrClass = getOvrColorClass(player.ovr);
-    if (ovrClass) {
-        targetElement.classList.add(ovrClass);
-    }
+    if (ovrClass) targetElement.classList.add(ovrClass);
 
     const nameString = player.name;
     const roleUiString = isBatter ? `(#${player.battingOrder || '?'})` : `(${getPitcherRoleAbbreviation(player.role)})`;
@@ -297,8 +312,7 @@ function displayCurrentPlayer(player, isBatter, targetElement) {
             <span class="stat-label">POW</span><span class="stat-value ${getStatColorClass(player.power)}">${player.power}</span>
             <span class="stat-label">HIT</span><span class="stat-value ${getStatColorClass(player.hitRate)}">${player.hitRate}</span>
             <span class="stat-label">CON</span><span class="stat-value ${getStatColorClass(player.contact)}">${player.contact}</span>
-            <span class="stat-label">SPD</span><span class="stat-value ${getStatColorClass(player.speed)}">${player.speed}</span>
-        `;
+            <span class="stat-label">SPD</span><span class="stat-value ${getStatColorClass(player.speed)}">${player.speed}</span>`;
         const gameHistory = player.atBatHistory || [];
         const historyItems = gameHistory.map(item => `<span>${item}</span>`).join(' ');
         if (gameHistory.length > 0 && targetElement !== DOM_ELEMENTS.mobileBatterDisplay) {
@@ -310,8 +324,11 @@ function displayCurrentPlayer(player, isBatter, targetElement) {
         const ra9 = outs > 0 ? (runs / outs * 27) : 0; 
         const so = player.careerStrikeouts || 0;
         careerStatString = `ERA: ${outs > 0 ? ra9.toFixed(2) : 'N/A'} / SO: ${so}`;
-        const staminaFilledPercent = player.maxStamina > 0 ? (player.currentStamina / player.maxStamina * 100) : 0;
         
+        const displayCurrentStamina = Math.round(player.currentStamina);
+        const staminaFilledPercent = player.maxStamina > 0 ? (displayCurrentStamina / player.maxStamina * 100) : 0;
+        const safeStaminaFilledPercent = Math.max(0, Math.min(100, staminaFilledPercent));
+
         statsGridHTML = `
             <span class="stat-label">POW</span><span class="stat-value ${getStatColorClass(player.power)}">${player.power}</span>
             <span class="stat-label">CON</span><span class="stat-value ${getStatColorClass(player.control)}">${player.control}</span>
@@ -324,7 +341,6 @@ function displayCurrentPlayer(player, isBatter, targetElement) {
             </div>
         `;
     }
-
     targetElement.innerHTML = `
         <h5>
             <span class="player-main-name">${nameString}</span>
@@ -333,35 +349,27 @@ function displayCurrentPlayer(player, isBatter, targetElement) {
             <span class="player-career-stat">${careerStatString}</span>
         </h5>
         <div class="player-stats-detailed">${statsGridHTML}</div>
-        ${historyDisplayHTML}
-    `;
+        ${historyDisplayHTML}`;
 }
 
 function displaySingleTeamLineupList(teamKey, gameTeamsData, currentActiveBatter) {
     const team = gameTeamsData[teamKey];
     const listElement = teamKey === 'away' ? DOM_ELEMENTS.awayTeamLineupList : DOM_ELEMENTS.homeTeamLineupList;
     if (!team || !team.batters || !listElement) return;
-
     listElement.innerHTML = '';
     team.batters.forEach((batter) => { 
         const listItem = document.createElement('li');
-        if (batter === currentActiveBatter) {
-            listItem.classList.add('current-batter-in-lineup');
-        }
-
+        if (batter === currentActiveBatter) listItem.classList.add('current-batter-in-lineup');
         const careerAB = batter.careerAtBats || 0;
         const careerH = batter.careerHits || 0;
         const avg = careerAB > 0 ? (careerH / careerAB) : 0;
         const avgString = avg.toFixed(3).replace(/^0/, '');
         const hr = batter.careerHomeRuns || 0;
-
         const ovrClass = getOvrColorClass(batter.ovr);
-
         listItem.innerHTML = `
             <span class="player-ovr-lineup ${ovrClass}">${batter.ovr}</span>
             <span class="player-name-lineup ${ovrClass}">${batter.name}</span>
-            <span class="batter-career-stats">${avgString} / ${hr}HR</span>
-        `;
+            <span class="batter-career-stats">${avgString} / ${hr}HR</span>`;
         listElement.appendChild(listItem);
     });
 }
@@ -374,53 +382,49 @@ export function displayTeamBullpen(teamKey, gameTeamsData, activePitcher) {
         if (listElement) listElement.innerHTML = '<li>Pitcher data not available.</li>';
         return;
     }
-
     listElement.innerHTML = ''; 
 
-    const bullpenPitchers = [];
-    if (team.pitchers.starter) bullpenPitchers.push(team.pitchers.starter);
-    if (team.pitchers.reliever) bullpenPitchers.push(team.pitchers.reliever);
-    if (team.pitchers.closer) bullpenPitchers.push(team.pitchers.closer);
+    const pitchersToDisplay = [];
+    if (team.pitchers.startersRotation && Array.isArray(team.pitchers.startersRotation)) {
+        pitchersToDisplay.push(...team.pitchers.startersRotation.filter(p => p));
+    }
+    if (team.pitchers.reliever) pitchersToDisplay.push(team.pitchers.reliever);
+    if (team.pitchers.closer) pitchersToDisplay.push(team.pitchers.closer);
     
-    const validBullpenPitchers = bullpenPitchers.filter(p => p);
+    const validPitchers = pitchersToDisplay.filter(p => p);
 
-    if (validBullpenPitchers.length === 0) {
+    if (validPitchers.length === 0) {
         listElement.innerHTML = '<li>No pitchers available.</li>';
         return;
     }
 
-    validBullpenPitchers.forEach(pitcher => {
+    validPitchers.forEach(pitcher => {
         const listItem = document.createElement('li');
         const ovrClass = getOvrColorClass(pitcher.ovr);
-        
         const outs = pitcher.careerOutsRecorded || 0;
         const runs = pitcher.careerRunsAllowed || 0;
         const era = outs > 0 ? (runs / outs * 27) : 0;
         const eraString = outs > 0 ? era.toFixed(2) : "N/A";
+        const displayCurrentStamina = Math.round(pitcher.currentStamina);
 
         if (activePitcher && activePitcher.name === pitcher.name && activePitcher.role === pitcher.role) {
             listItem.classList.add('active-pitcher-in-bullpen');
         }
-
         listItem.innerHTML = `
             <span class="bullpen-pitcher-ovr ${ovrClass}">${pitcher.ovr}</span>
             <span class="bullpen-pitcher-name ${ovrClass}">${pitcher.name}</span>
             <span class="bullpen-pitcher-role">${getPitcherRoleAbbreviation(pitcher.role)}</span>
             <span class="bullpen-pitcher-era">${eraString}</span>
-            <span class="bullpen-pitcher-stamina">${pitcher.currentStamina}/${pitcher.maxStamina}</span>
-        `;
+            <span class="bullpen-pitcher-stamina">${displayCurrentStamina}/${pitcher.maxStamina}</span>`;
         listElement.appendChild(listItem);
     });
 }
-
 
 export function triggerScoreFlash(runsScored) {
     if (!DOM_ELEMENTS.scoreFlashElement || runsScored <= 0) return;
     DOM_ELEMENTS.scoreFlashElement.textContent = `+${runsScored} Run${runsScored > 1 ? 's' : ''}!`;
     DOM_ELEMENTS.scoreFlashElement.classList.add('show');
-    setTimeout(() => {
-        DOM_ELEMENTS.scoreFlashElement.classList.remove('show');
-    }, 600);
+    setTimeout(() => DOM_ELEMENTS.scoreFlashElement.classList.remove('show'), 600);
 }
 
 export function updateAllDisplays(gameState, gameTeams, teamRecords) {
@@ -440,8 +444,10 @@ export function updateAllDisplays(gameState, gameTeams, teamRecords) {
         const currentBatterActualIndex = gameTeams[battingTeamKey].batters.findIndex(b => b.name === currentBatterForDisplay.name);
         currentBatterForDisplay.battingOrder = (currentBatterActualIndex !== -1) ? currentBatterActualIndex + 1 : '?';
     }
-
-    updateStandingsDisplay(teamRecords);
+    
+    const awayId = gameTeams.away?.id;
+    const homeId = gameTeams.home?.id;
+    updateStandingsDisplay(teamRecords, awayId, homeId);
 
     if (isMobileView) {
         if (DOM_ELEMENTS.mobileBatterDisplay) displayCurrentPlayer(currentBatterForDisplay, true, DOM_ELEMENTS.mobileBatterDisplay);
@@ -474,30 +480,30 @@ export function updateAllDisplays(gameState, gameTeams, teamRecords) {
     }
 }
 
-function updateStandingsDisplay(teamRecords) {
-    if (!teamRecords) return;
-    if (DOM_ELEMENTS.awayTeamRecordSpan && teamRecords.away) {
-        DOM_ELEMENTS.awayTeamRecordSpan.textContent = `(${teamRecords.away.wins}-${teamRecords.away.losses})`;
+function updateStandingsDisplay(teamRecords, awayTeamId, homeTeamId) {
+    if (!teamRecords) {
+        if (DOM_ELEMENTS.awayTeamRecordSpan) DOM_ELEMENTS.awayTeamRecordSpan.textContent = `(0-0)`;
+        if (DOM_ELEMENTS.homeTeamRecordSpan) DOM_ELEMENTS.homeTeamRecordSpan.textContent = `(0-0)`;
+        return;
     }
-    if (DOM_ELEMENTS.homeTeamRecordSpan && teamRecords.home) {
-        DOM_ELEMENTS.homeTeamRecordSpan.textContent = `(${teamRecords.home.wins}-${teamRecords.home.losses})`;
+
+    const awayRecord = awayTeamId ? teamRecords[awayTeamId] : null;
+    const homeRecord = homeTeamId ? teamRecords[homeTeamId] : null;
+
+    if (DOM_ELEMENTS.awayTeamRecordSpan) {
+        DOM_ELEMENTS.awayTeamRecordSpan.textContent = awayRecord ? `(${(awayRecord.wins || 0)}-${(awayRecord.losses || 0)})` : `(0-0)`;
+    }
+    if (DOM_ELEMENTS.homeTeamRecordSpan) {
+        DOM_ELEMENTS.homeTeamRecordSpan.textContent = homeRecord ? `(${(homeRecord.wins || 0)}-${(homeRecord.losses || 0)})` : `(0-0)`;
     }
 }
-
-const eventKeywords = {
-    'strikes out': 'strikeout', 'grounds out': 'out', 'flies out': 'out',
-    'pops up': 'out', 'lines out': 'out', 'out': 'out', 'home run': 'homerun',
-    'single': 'single', 'double': 'double', 'triple': 'triple', 'walk': 'walk'
-};
 
 export function updateOutcomeText(message, outcomeType) {
     if (!DOM_ELEMENTS.outcomeText) return;
     DOM_ELEMENTS.outcomeText.innerHTML = '';
     DOM_ELEMENTS.outcomeText.className = 'outcome-neutral';
-
     const messageSpan = document.createElement('span');
     messageSpan.textContent = message;
-
     if (outcomeType && typeof outcomeType === 'string') {
         const generalClass = `outcome-${outcomeType.toLowerCase().replace(/_/g, '-')}`;
         messageSpan.classList.add(generalClass);

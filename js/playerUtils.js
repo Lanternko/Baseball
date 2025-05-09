@@ -1,8 +1,8 @@
-// js/playerUtils.js
 import { CONFIG } from './config.js';
 import { loadData, PLAYER_STATS_KEY } from './storageUtils.js';
+import { ALL_TEAMS, getTeamById as getBaseTeamById } from './teamsData.js';
 
-// OVR Calculation Functions
+// OVR 計算函數 (保持不變)
 function calculateBatterOVR(batter) {
     const w = CONFIG.ovrWeights.batter;
     const power   = batter.power   ?? 5;
@@ -21,177 +21,117 @@ function calculatePitcherOVR(p) {
   const control   = p.control   ?? 5;
   const technique = p.technique ?? 5;
   const maxSta    = p.maxStamina ?? 70;
-
-  // staminaScore 0~5 取決於 maxStamina (60 以下無加成)
   const staminaScore = Math.max(0, (maxSta - 60) / 40) * (10 * w.staminaEffect);
-
   const score =
     power     * w.power     +
     velocity  * w.velocity  +
     control   * w.control   +
     technique * w.technique +
     staminaScore;
-
   const ovr = Math.round(score * w.scale + w.base);
   return Math.min(99, Math.max(40, ovr));
 }
 
-// Player Object Factory
-export function createPlayer(name, type, stats = {}) {
-    const p = { name, type };
+export function createPlayer(name, type, baseStats = {}, careerStats = {}, teamId = null) {
+    const p = { name, type, teamId };
+    Object.assign(p, baseStats);
+
     if (type === 'batter') {
-        p.power   = stats.power   ?? 5;
-        p.hitRate = stats.hitRate ?? 5;
-        p.contact = stats.contact ?? 5;
-        p.speed   = stats.speed   ?? 5;
-        // Game-specific stats (reset each game)
+        p.careerAtBats = careerStats.careerAtBats || 0;
+        p.careerHits = careerStats.careerHits || 0;
+        p.careerHomeRuns = careerStats.careerHomeRuns || 0;
+        p.careerRunsBattedIn = careerStats.careerRunsBattedIn || 0;
         p.atBats = 0;
         p.hits = 0;
         p.runsBattedIn = 0;
-        p.gameHomeRuns = 0; // Game-specific HR
+        p.gameHomeRuns = 0;
         p.atBatHistory = [];
         p.performanceString = '0-0';
-        // Career stats (loaded or default to 0)
-        p.careerAtBats = stats.careerAtBats || 0;
-        p.careerHits = stats.careerHits || 0;
-        p.careerHomeRuns = stats.careerHomeRuns || 0; // New career stat
-        p.careerRunsBattedIn = stats.careerRunsBattedIn || 0;
     } else if (type === 'pitcher') {
-        p.role       = stats.role || 'Reliever';
-        p.power      = stats.power     ?? 5;
-        p.velocity   = stats.velocity  ?? 5;
-        p.control    = stats.control   ?? 5;
-        p.technique  = stats.technique ?? 5;
-        p.maxStamina = stats.maxStamina ?? (p.role === 'Starter' ? 100 : p.role === 'Reliever' ? 60 : 40);
+        p.role = baseStats.role || 'Reliever'; // role 來自 baseStats
+        p.maxStamina = baseStats.maxStamina ?? (p.role === 'Starter' ? 100 : p.role === 'Reliever' ? 60 : 40);
+        p.careerOutsRecorded = careerStats.careerOutsRecorded || 0;
+        p.careerRunsAllowed = careerStats.careerRunsAllowed || 0;
+        p.careerStrikeouts = careerStats.careerStrikeouts || 0;
+        p.careerWins = careerStats.careerWins || 0;
+        p.careerLosses = careerStats.careerLosses || 0;
         p.currentStamina = p.maxStamina;
-        // Game-specific stats
-        p.gameStrikeouts = 0; // Game-specific SO
+        p.gameStrikeouts = 0;
         p.gameOutsRecorded = 0;
         p.gameRunsAllowed = 0;
-        // Career stats
-        p.careerOutsRecorded = stats.careerOutsRecorded || 0;
-        p.careerRunsAllowed = stats.careerRunsAllowed || 0;
-        p.careerStrikeouts = stats.careerStrikeouts || 0; // New career stat
-        p.careerWins = stats.careerWins || 0;
-        p.careerLosses = stats.careerLosses || 0;
-        p.teamKeyOriginal = stats.teamKeyOriginal ?? null;
     }
-    // Calculate OVR
+
     if (type === 'batter') p.ovr = calculateBatterOVR(p);
     else if (type === 'pitcher') p.ovr = calculatePitcherOVR(p);
     return p;
 }
 
-// Initial Team Data structure (example, ensure your actual data matches this structure for new stats)
-export const initialGameTeams = {
-  away: {
-    name: 'Yankees',
-    batters: [
-      createPlayer('Aaron Judge', 'batter', { power: 10, hitRate: 8, contact: 7, speed: 6, careerHomeRuns: 0 }),
-      createPlayer('Paul Goldschmidt', 'batter', { power: 8,  hitRate: 9, contact: 8, speed: 5, careerHomeRuns: 0 }),
-      createPlayer('Trent Grisham',   'batter', { power: 6,  hitRate: 6, contact: 5, speed: 7, careerHomeRuns: 0 }),
-      createPlayer('Anthony Volpe',   'batter', { power: 5,  hitRate: 7, contact: 7, speed: 9, careerHomeRuns: 0 }),
-      createPlayer('Austin Wells',    'batter', { power: 7,  hitRate: 5, contact: 6, speed: 5, careerHomeRuns: 0 }),
-      createPlayer('Ben Rice',        'batter', { power: 5,  hitRate: 6, contact: 6, speed: 6, careerHomeRuns: 0 }),
-      createPlayer('Cody Bellinger',  'batter', { power: 7,  hitRate: 7, contact: 7, speed: 7, careerHomeRuns: 0 }),
-      createPlayer('Gleyber Torres',  'batter', { power: 6,  hitRate: 7, contact: 7, speed: 6, careerHomeRuns: 0 }),
-      createPlayer('Jasson Domínguez','batter', { power: 7,  hitRate: 6, contact: 5, speed: 8, careerHomeRuns: 0 })
-    ],
-    pitchers: {
-      starter: createPlayer('Max Fried', 'pitcher', { role: 'Starter', power: 9, velocity: 8, control: 8, technique: 7, maxStamina: 95, careerStrikeouts: 0 }),
-      reliever: createPlayer('Carlos Rodón', 'pitcher', { role: 'Reliever', power: 8, velocity: 7, control: 7, technique: 6, maxStamina: 75, careerStrikeouts: 0 }),
-      closer: createPlayer('Devin Williams', 'pitcher', { role: 'Closer', power: 7, velocity: 8, control: 6, technique: 7, maxStamina: 45, careerStrikeouts: 0 })
-    },
-    scorePerInning: Array(CONFIG.innings).fill(0), totalRuns: 0, totalHits: 0, totalErrors: 0, currentBatterIndex: 0
-  },
-  home: {
-    name: 'Dodgers',
-    batters: [
-      createPlayer('Shohei Ohtani', 'batter', { power: 9, hitRate: 9, contact: 8, speed: 8, careerHomeRuns: 0 }),
-      createPlayer('Teoscar Hernández', 'batter', { power: 8, hitRate: 8, contact: 7, speed: 7, careerHomeRuns: 0 }),
-      createPlayer('Freddie Freeman', 'batter', { power: 7, hitRate: 9, contact: 9, speed: 6, careerHomeRuns: 0 }),
-      createPlayer('Mookie Betts', 'batter', { power: 8, hitRate: 8, contact: 8, speed: 9, careerHomeRuns: 0 }),
-      createPlayer('Max Muncy', 'batter', { power: 7, hitRate: 7, contact: 6, speed: 5, careerHomeRuns: 0 }),
-      createPlayer('Will Smith', 'batter', { power: 6, hitRate: 7, contact: 8, speed: 5, careerHomeRuns: 0 }),
-      createPlayer('Gavin Lux', 'batter', { power: 5, hitRate: 6, contact: 7, speed: 7, careerHomeRuns: 0 }),
-      createPlayer('James Outman', 'batter', { power: 7, hitRate: 5, contact: 5, speed: 8, careerHomeRuns: 0 }),
-      createPlayer('Miguel Vargas', 'batter', { power: 5, hitRate: 6, contact: 7, speed: 6, careerHomeRuns: 0 })
-    ],
-    pitchers: {
-      starter: createPlayer('Yoshinobu Yamamoto', 'pitcher', { role: 'Starter', power: 8, velocity: 9, control: 9, technique: 8, maxStamina: 100, careerStrikeouts: 0 }),
-      reliever: createPlayer('Blake Treinen', 'pitcher', { role: 'Reliever', power: 7, velocity: 8, control: 7, technique: 6, maxStamina: 70, careerStrikeouts: 0 }),
-      closer: createPlayer('Evan Phillips', 'pitcher', { role: 'Closer', power: 9, velocity: 9, control: 8, technique: 7, maxStamina: 50, careerStrikeouts: 0 })
-    },
-    scorePerInning: Array(CONFIG.innings).fill(0), totalRuns: 0, totalHits: 0, totalErrors: 0, currentBatterIndex: 0
-  }
-};
+export function prepareTeamsData(awayTeamId, homeTeamId) {
+    const allSavedPlayerStats = loadData(PLAYER_STATS_KEY, {});
 
-export function prepareTeamsData(baseTeamsStructure) {
-    let workingTeamsData = JSON.parse(JSON.stringify(baseTeamsStructure));
-    const savedPlayerStats = loadData(PLAYER_STATS_KEY);
+    const structureTeam = (teamId) => {
+        const baseTeamData = getBaseTeamById(teamId);
+        if (!baseTeamData) {
+            console.error(`Team with ID "${teamId}" not found in teamsData.js`);
+            return { id: teamId, name: `Unknown Team (${teamId})`, batters: [], pitchers: { startersRotation: [], reliever: null, closer: null }, scorePerInning: Array(CONFIG.innings).fill(0), totalRuns: 0, totalHits: 0, totalErrors: 0, currentBatterIndex: 0 };
+        }
 
-    for (const teamKey in workingTeamsData) {
-        const teamData = workingTeamsData[teamKey];
-        if (teamData.batters && Array.isArray(teamData.batters)) {
-            teamData.batters = teamData.batters.map(baseBatterStats => {
-                let careerData = {};
-                if (savedPlayerStats && savedPlayerStats[teamKey] && savedPlayerStats[teamKey].batters) {
-                    const savedBatter = savedPlayerStats[teamKey].batters.find(sb => sb.name === baseBatterStats.name);
-                    if (savedBatter) {
-                        careerData = {
-                            careerAtBats: savedBatter.careerAtBats || 0,
-                            careerHits: savedBatter.careerHits || 0,
-                            careerHomeRuns: savedBatter.careerHomeRuns || 0, // Load career HR
-                            careerRunsBattedIn: savedBatter.careerRunsBattedIn || 0,
-                        };
-                    }
-                }
-                // Create player with merged base and career stats
-                const player = createPlayer(baseBatterStats.name, 'batter', { ...baseBatterStats, ...careerData });
-                // Reset game-specific stats explicitly after creation
-                player.atBats = 0;
-                player.hits = 0;
-                player.runsBattedIn = 0;
-                player.gameHomeRuns = 0;
-                player.atBatHistory = [];
-                player.performanceString = '0-0';
-                return player;
+        // PLAYER_STATS_KEY 結構: { teamId: { players: { "Player Name1": {careerStats...}, "Player Name2": ... } } }
+        const teamPlayerSavedStats = allSavedPlayerStats[teamId]?.players || {};
+
+        const processedBatters = baseTeamData.batters.map(baseBatterInfo => {
+            const savedBatterCareerStats = teamPlayerSavedStats[baseBatterInfo.name] || {};
+            return createPlayer(baseBatterInfo.name, 'batter', baseBatterInfo.stats, savedBatterCareerStats, teamId);
+        });
+
+        const processedPitchers = {
+            startersRotation: [],
+            reliever: null,
+            closer: null
+        };
+
+        // 處理先發投手輪值
+        if (baseTeamData.pitchers.startersRotation && Array.isArray(baseTeamData.pitchers.startersRotation)) {
+            processedPitchers.startersRotation = baseTeamData.pitchers.startersRotation.map(baseStarterInfo => {
+                const savedStarterCareerStats = teamPlayerSavedStats[baseStarterInfo.name] || {};
+                // 確保 role 是 'Starter'
+                const starterBaseStats = { ...baseStarterInfo.stats, role: 'Starter' };
+                return createPlayer(baseStarterInfo.name, 'pitcher', starterBaseStats, savedStarterCareerStats, teamId);
             });
         }
 
-        if (teamData.pitchers && typeof teamData.pitchers === 'object') {
-            for (const role in teamData.pitchers) {
-                const basePitcherStats = teamData.pitchers[role];
-                if (basePitcherStats) {
-                    let careerData = {};
-                    if (savedPlayerStats && savedPlayerStats[teamKey] && savedPlayerStats[teamKey].pitchers && savedPlayerStats[teamKey].pitchers[role]) {
-                         const savedPitcher = savedPlayerStats[teamKey].pitchers[role];
-                         if (savedPitcher && basePitcherStats.name === savedPitcher.name) {
-                            careerData = {
-                                careerOutsRecorded: savedPitcher.careerOutsRecorded || 0,
-                                careerRunsAllowed: savedPitcher.careerRunsAllowed || 0,
-                                careerStrikeouts: savedPitcher.careerStrikeouts || 0, // Load career SO
-                                careerWins: savedPitcher.careerWins || 0,
-                                careerLosses: savedPitcher.careerLosses || 0,
-                            };
-                         }
-                    }
-                    // Create player with merged base and career stats
-                    const player = createPlayer(basePitcherStats.name, 'pitcher', { ...basePitcherStats, ...careerData, role: basePitcherStats.role || role });
-                    // Reset game-specific stats
-                    player.currentStamina = player.maxStamina;
-                    player.gameStrikeouts = 0;
-                    player.gameOutsRecorded = 0;
-                    player.gameRunsAllowed = 0;
-                    teamData.pitchers[role] = player;
-                }
+        // 處理牛棚投手 (中繼和終結者)
+        ['reliever', 'closer'].forEach(role => {
+            const basePitcherInfo = baseTeamData.pitchers[role];
+            if (basePitcherInfo) {
+                const savedPitcherCareerStats = teamPlayerSavedStats[basePitcherInfo.name] || {};
+                 // 確保 role 正確
+                const pitcherBaseStats = { ...basePitcherInfo.stats, role: basePitcherInfo.stats.role || role.charAt(0).toUpperCase() + role.slice(1) };
+                processedPitchers[role] = createPlayer(basePitcherInfo.name, 'pitcher', pitcherBaseStats, savedPitcherCareerStats, teamId);
             }
-        }
-        teamData.scorePerInning = Array(CONFIG.innings).fill(0);
-        teamData.totalRuns = 0;
-        teamData.totalHits = 0;
-        teamData.totalErrors = 0;
-        teamData.currentBatterIndex = 0;
-    }
-    return workingTeamsData;
+        });
+
+        return {
+            id: baseTeamData.id,
+            name: baseTeamData.name,
+            batters: processedBatters,
+            pitchers: processedPitchers, // 現在包含 startersRotation 陣列
+            scorePerInning: Array(CONFIG.innings).fill(0),
+            totalRuns: 0,
+            totalHits: 0,
+            totalErrors: 0,
+            currentBatterIndex: 0
+        };
+    };
+
+    return {
+        away: structureTeam(awayTeamId),
+        home: structureTeam(homeTeamId)
+    };
+}
+
+export function getDefaultTeamIds() {
+    const awayId = ALL_TEAMS.length > 0 ? ALL_TEAMS[0].id : "NYY"; // 預設為 NYY
+    const homeId = ALL_TEAMS.length > 1 ? ALL_TEAMS[1].id : "LAD"; // 預設為 LAD
+    return { awayTeamId: awayId, homeTeamId: homeId };
 }

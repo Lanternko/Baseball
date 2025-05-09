@@ -1,33 +1,43 @@
 // js/main.js
 import { loadData, TEAM_RECORDS_KEY, PLAYER_STATS_KEY, clearSavedData } from './storageUtils.js';
-import { initialGameTeams, prepareTeamsData } from './playerUtils.js';
+import { prepareTeamsData, getDefaultTeamIds } from './playerUtils.js';
 import { DOM_ELEMENTS, initializeUI, updateAllDisplays, updateOutcomeText } from './ui.js';
 import { initializeGame, playNextAtBat, getGameState, changeHalfInning, endGame } from './gameLogic.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    let currentTeamRecords = loadData(TEAM_RECORDS_KEY, {
-        away: { name: initialGameTeams.away.name, wins: 0, losses: 0 },
-        home: { name: initialGameTeams.home.name, wins: 0, losses: 0 }
-    });
-    let currentTeamsData = prepareTeamsData(initialGameTeams); // This loads initial career stats
+    const { awayTeamId, homeTeamId } = getDefaultTeamIds();
+
+    let currentTeamsData = prepareTeamsData(awayTeamId, homeTeamId);
+    let currentTeamRecords = loadData(TEAM_RECORDS_KEY, {});
+
+    if (!currentTeamRecords[awayTeamId]) {
+        currentTeamRecords[awayTeamId] = { name: currentTeamsData.away.name, wins: 0, losses: 0, starterIndex: 0 };
+    } else {
+        currentTeamRecords[awayTeamId].name = currentTeamsData.away.name;
+        currentTeamRecords[awayTeamId].starterIndex = currentTeamRecords[awayTeamId].starterIndex || 0;
+    }
+    if (!currentTeamRecords[homeTeamId]) {
+        currentTeamRecords[homeTeamId] = { name: currentTeamsData.home.name, wins: 0, losses: 0, starterIndex: 0 };
+    } else {
+        currentTeamRecords[homeTeamId].name = currentTeamsData.home.name;
+        currentTeamRecords[homeTeamId].starterIndex = currentTeamRecords[homeTeamId].starterIndex || 0;
+    }
+
     initializeUI(currentTeamsData, currentTeamRecords);
 
     let longPressSimInterval = null;
-    let isLongPressSimulating = false; // For the "Next Batter" long press
-    let isBatchSimulating = false; // For "Sim Inning", "Sim Game", "Sim 10 Games"
+    let isLongPressSimulating = false;
+    let isBatchSimulating = false;
     let pressTimer = null;
     const LONG_PRESS_DURATION = 400;
     const SIM_INTERVAL_DELAY = 100;
 
-    // --- Button State Management ---
     function disableGameControls(simulatingWhichButton = null) {
-        isBatchSimulating = true; // General flag for any batch simulation
+        isBatchSimulating = true;
         DOM_ELEMENTS.nextPlayButton.disabled = true;
         if (DOM_ELEMENTS.simInningButton) DOM_ELEMENTS.simInningButton.disabled = true;
         if (DOM_ELEMENTS.simGameButton) DOM_ELEMENTS.simGameButton.disabled = true;
-        // Sim 10 Games is special, it might re-enable itself if a single game sim is running
         if (DOM_ELEMENTS.sim10GamesButton) DOM_ELEMENTS.sim10GamesButton.disabled = true;
-
 
         if (simulatingWhichButton && DOM_ELEMENTS[simulatingWhichButton.id]) {
             DOM_ELEMENTS[simulatingWhichButton.id].classList.add('simulating');
@@ -36,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function enableGameControls(gameOver = false) {
-        isBatchSimulating = false; // Reset general flag
+        isBatchSimulating = false;
         const originalButtonTexts = {
             nextPlayButton: 'Next Batter',
             simInningButton: 'Sim Inning',
@@ -59,9 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
             DOM_ELEMENTS.simGameButton.classList.remove('simulating');
             DOM_ELEMENTS.simGameButton.textContent = originalButtonTexts.simGameButton;
         }
-        // Sim 10 Games button can always be enabled if no other batch sim is running
         if (DOM_ELEMENTS.sim10GamesButton) {
-            DOM_ELEMENTS.sim10GamesButton.disabled = false; 
+            DOM_ELEMENTS.sim10GamesButton.disabled = false;
             DOM_ELEMENTS.sim10GamesButton.classList.remove('simulating');
             DOM_ELEMENTS.sim10GamesButton.textContent = originalButtonTexts.sim10GamesButton;
         }
@@ -81,9 +90,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         isLongPressSimulating = true;
         try {
-            playNextAtBat(currentTeamsData);
+            playNextAtBat(currentTeamsData); // gameLogic's endGame will handle saving teamRecords
             const newState = getGameState();
-            currentTeamRecords = loadData(TEAM_RECORDS_KEY, currentTeamRecords); // Refresh records
+            currentTeamRecords = loadData(TEAM_RECORDS_KEY, currentTeamRecords); // Reload records to get updated starterIndex
             updateAllDisplays(newState, currentTeamsData, currentTeamRecords);
 
             if (newState.gameOver) {
@@ -104,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function startLongPressSimulation() {
         if (longPressSimInterval || getGameState().gameOver || isBatchSimulating) return;
-        isLongPressSimulating = true; // Set flag for long press
+        isLongPressSimulating = true;
         disableGameControls(DOM_ELEMENTS.nextPlayButton);
         
         longPressSimInterval = setInterval(() => {
@@ -120,21 +129,37 @@ document.addEventListener('DOMContentLoaded', () => {
             longPressSimInterval = null;
         }
         isLongPressSimulating = false;
-        if (!isBatchSimulating) { // Only enable if no other batch sim is running
+        if (!isBatchSimulating) {
             enableGameControls(getGameState().gameOver);
         }
     }
 
-    // --- Event Listeners ---
     DOM_ELEMENTS.startGameButton.addEventListener('click', () => {
         stopLongPressSimulation();
-        isBatchSimulating = false; // Ensure this is reset
-        currentTeamsData = prepareTeamsData(initialGameTeams); // Load career stats
-        currentTeamRecords = loadData(TEAM_RECORDS_KEY, { // Load W-L records
-             away: { name: currentTeamsData.away.name, wins: 0, losses: 0 },
-             home: { name: currentTeamsData.home.name, wins: 0, losses: 0 }
-        });
-        initializeGame(currentTeamsData); // Resets game-specific stats
+        isBatchSimulating = false;
+        
+        const defaultIds = getDefaultTeamIds(); 
+        const awayIdToPlay = defaultIds.awayTeamId; 
+        const homeIdToPlay = defaultIds.homeTeamId; 
+
+        currentTeamsData = prepareTeamsData(awayIdToPlay, homeIdToPlay);
+        currentTeamRecords = loadData(TEAM_RECORDS_KEY, {}); 
+        
+        if (!currentTeamRecords[awayIdToPlay]) {
+            currentTeamRecords[awayIdToPlay] = { name: currentTeamsData.away.name, wins: 0, losses: 0, starterIndex: 0 };
+        } else {
+            currentTeamRecords[awayIdToPlay].name = currentTeamsData.away.name; // Sync name
+            currentTeamRecords[awayIdToPlay].starterIndex = currentTeamRecords[awayIdToPlay].starterIndex || 0;
+        }
+        if (!currentTeamRecords[homeIdToPlay]) {
+            currentTeamRecords[homeIdToPlay] = { name: currentTeamsData.home.name, wins: 0, losses: 0, starterIndex: 0 };
+        } else {
+            currentTeamRecords[homeIdToPlay].name = currentTeamsData.home.name; // Sync name
+            currentTeamRecords[homeIdToPlay].starterIndex = currentTeamRecords[homeIdToPlay].starterIndex || 0;
+        }
+        
+        initializeGame(currentTeamsData, currentTeamRecords[awayIdToPlay].starterIndex, currentTeamRecords[homeIdToPlay].starterIndex);
+        
         const currentGameState = getGameState();
         updateAllDisplays(currentGameState, currentTeamsData, currentTeamRecords);
 
@@ -144,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
             DOM_ELEMENTS.simulationControlsContainer.style.display = 'flex';
         }
         enableGameControls(false);
-        updateOutcomeText("Game started! Away team batting.", "GAME_EVENT");
+        updateOutcomeText(`Game started! ${currentTeamsData.away.name} vs ${currentTeamsData.home.name}.`, "GAME_EVENT");
     });
 
     DOM_ELEMENTS.nextPlayButton.addEventListener('click', () => {
@@ -181,7 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     DOM_ELEMENTS.nextPlayButton.addEventListener('contextmenu', (e) => e.preventDefault());
 
-    // --- Simulation Button Event Listeners ---
     if (DOM_ELEMENTS.simInningButton) {
         DOM_ELEMENTS.simInningButton.addEventListener('click', async () => {
             if (getGameState().gameOver || isLongPressSimulating || isBatchSimulating) return;
@@ -194,14 +218,15 @@ document.addEventListener('DOMContentLoaded', () => {
             
             await new Promise(resolve => {
                 function simulateCurrentInningStep() {
-                    let currentSimState = getGameState(); // Get fresh state each step
+                    let currentSimState = getGameState();
                     if (currentSimState.gameOver || 
                         ((currentSimState.currentInning !== initialInning || currentSimState.halfInning !== initialHalf) && currentSimState.outs === 0)) {
                         resolve();
                         return;
                     }
-                    playNextAtBat(currentTeamsData);
-                    if (!getGameState().gameOver) { // Check game over state from global after play
+                    playNextAtBat(currentTeamsData); 
+                    currentSimState = getGameState(); 
+                    if (!currentSimState.gameOver) {
                         requestAnimationFrame(simulateCurrentInningStep);
                     } else {
                         resolve(); 
@@ -212,6 +237,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const finalGameState = getGameState();
             currentTeamRecords = loadData(TEAM_RECORDS_KEY, currentTeamRecords);
+            // DO NOT call prepareTeamsData here for current game's score display.
+            // currentTeamsData already holds the scores for the simulated inning.
             updateAllDisplays(finalGameState, currentTeamsData, currentTeamRecords);
             enableGameControls(finalGameState.gameOver);
             if (!finalGameState.gameOver) {
@@ -232,21 +259,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     resolve();
                     return;
                 }
-                playNextAtBat(currentTeamsData);
-                // No per-at-bat UI update for full game sim for speed
+                playNextAtBat(currentTeamsData); 
                 requestAnimationFrame(simulateGameStep);
             }
             requestAnimationFrame(simulateGameStep);
         });
 
         const finalGameState = getGameState();
-        currentTeamRecords = loadData(TEAM_RECORDS_KEY, currentTeamRecords); // Refresh records
-        // currentTeamsData will have been updated by playNextAtBat -> processAtBatOutcome -> endGame (which saves player stats)
-        // So, we re-prepare to load the latest career stats for display.
-        currentTeamsData = prepareTeamsData(initialGameTeams); 
+        currentTeamRecords = loadData(TEAM_RECORDS_KEY, currentTeamRecords);
+        // DO NOT call prepareTeamsData here. currentTeamsData has the game scores.
+        // If you need to refresh career stats for display AFTER this game,
+        // then call prepareTeamsData, but the scoreboard will show the fresh game state (all zeros).
+        // For now, we want to show the scores of the game just simulated.
         updateAllDisplays(finalGameState, currentTeamsData, currentTeamRecords);
-        enableGameControls(finalGameState.gameOver); // This will also hide sim buttons if game over
-        // Outcome text is already updated by endGame
+        enableGameControls(finalGameState.gameOver);
     }
 
     if (DOM_ELEMENTS.simGameButton) {
@@ -254,47 +280,62 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function handleSimulateMultipleGames(numberOfGames) {
-        if (isLongPressSimulating || isBatchSimulating) return; // Prevent if any sim is active
+        if (isLongPressSimulating || isBatchSimulating) return;
 
         disableGameControls(DOM_ELEMENTS.sim10GamesButton);
         updateOutcomeText(`Simulating ${numberOfGames} games... Please wait.`, "GAME_EVENT");
         
-        // Ensure the "Sim 10 Games" button itself shows "Simulating..."
         if (DOM_ELEMENTS.sim10GamesButton) {
              DOM_ELEMENTS.sim10GamesButton.classList.add('simulating');
              DOM_ELEMENTS.sim10GamesButton.textContent = 'Simulating...';
         }
 
+        const defaultIds = getDefaultTeamIds(); 
 
         for (let i = 0; i < numberOfGames; i++) {
-            // Prepare fresh team data for each new game, loading latest career stats from storage
-            currentTeamsData = prepareTeamsData(initialGameTeams);
-            initializeGame(currentTeamsData); // Resets game-specific stats (like stamina, game HR/SO)
+            currentTeamRecords = loadData(TEAM_RECORDS_KEY, {}); 
             
-            updateOutcomeText(`Simulating Game ${i + 1} of ${numberOfGames}...`, "GAME_EVENT_MINOR"); // Minor update
+            const awayIdToPlay = defaultIds.awayTeamId;
+            const homeIdToPlay = defaultIds.homeTeamId;
 
-            // Silently simulate one full game
-            while (!getGameState().gameOver) {
-                playNextAtBat(currentTeamsData);
-                // No UI updates within this inner loop for speed
+            if (!currentTeamRecords[awayIdToPlay]) {
+                currentTeamRecords[awayIdToPlay] = { name: "Default Away", wins: 0, losses: 0, starterIndex: 0 };
             }
-            // endGame is called by playNextAtBat when a game concludes,
-            // which saves player career stats and team records to localStorage.
+            currentTeamRecords[awayIdToPlay].starterIndex = currentTeamRecords[awayIdToPlay].starterIndex || 0;
+            // Ensure name is updated from potentially fresh teamsData if we were to allow team selection
+            // For now, prepareTeamsData will get the name from teamsData.js
+            // currentTeamRecords[awayIdToPlay].name = currentTeamsData.away.name;
+
+
+            if (!currentTeamRecords[homeIdToPlay]) {
+                currentTeamRecords[homeIdToPlay] = { name: "Default Home", wins: 0, losses: 0, starterIndex: 0 };
+            }
+            currentTeamRecords[homeIdToPlay].starterIndex = currentTeamRecords[homeIdToPlay].starterIndex || 0;
+            // currentTeamRecords[homeIdToPlay].name = currentTeamsData.home.name;
+
+
+            currentTeamsData = prepareTeamsData(awayIdToPlay, homeIdToPlay); // Prepare fresh game data, loads career stats
+            // Sync names back to records if prepareTeamsData got them from a definitive source (teamsData.js)
+            currentTeamRecords[awayIdToPlay].name = currentTeamsData.away.name;
+            currentTeamRecords[homeIdToPlay].name = currentTeamsData.home.name;
+
+
+            initializeGame(currentTeamsData, currentTeamRecords[awayIdToPlay].starterIndex, currentTeamRecords[homeIdToPlay].starterIndex);
+            
+            updateOutcomeText(`Simulating Game ${i + 1} of ${numberOfGames}...`, "GAME_EVENT_MINOR");
+
+            while (!getGameState().gameOver) {
+                playNextAtBat(currentTeamsData); 
+            }
         }
 
-        // After all games, load the final aggregated stats and records
-        currentTeamsData = prepareTeamsData(initialGameTeams);
-        currentTeamRecords = loadData(TEAM_RECORDS_KEY, currentTeamRecords);
+        // After all games, load the final accumulated stats and records for display
+        currentTeamsData = prepareTeamsData(defaultIds.awayTeamId, defaultIds.homeTeamId); // Loads final career stats
+        currentTeamRecords = loadData(TEAM_RECORDS_KEY, currentTeamRecords); 
         
-        // Update UI once with the results of all simulated games
-        // getGameState() will reflect the state of the very last game, which is fine.
-        // The important part is that currentTeamsData (for career stats) and currentTeamRecords are up-to-date.
-        updateAllDisplays(getGameState(), currentTeamsData, currentTeamRecords);
-        enableGameControls(false); // Re-enable controls, game is not "over" in the context of starting a new one.
-                                   // However, the specific game state IS over.
-                                   // If the last game ended, the main game controls will be set appropriately by enableGameControls.
-                                   // We specifically want sim 10 games to be available again.
-        if (DOM_ELEMENTS.sim10GamesButton) { // Ensure sim 10 games button is re-enabled
+        updateAllDisplays(getGameState(), currentTeamsData, currentTeamRecords); 
+        enableGameControls(false); 
+        if (DOM_ELEMENTS.sim10GamesButton) {
             DOM_ELEMENTS.sim10GamesButton.disabled = false;
             DOM_ELEMENTS.sim10GamesButton.classList.remove('simulating');
             DOM_ELEMENTS.sim10GamesButton.textContent = 'Sim 10 Games';
@@ -307,7 +348,6 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM_ELEMENTS.sim10GamesButton.addEventListener('click', () => handleSimulateMultipleGames(10));
     }
 
-    // Optional: Reset Button
     const resetButton = document.createElement('button');
     resetButton.id = 'resetDataButton';
     resetButton.textContent = 'Reset All Saved Stats';
@@ -325,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(resetButton);
     resetButton.addEventListener('click', () => {
         if (confirm("Are you sure you want to reset ALL saved player stats and team records? This cannot be undone.")) {
-            clearSavedData(); // This now reloads the page
+            clearSavedData();
         }
     });
 });
