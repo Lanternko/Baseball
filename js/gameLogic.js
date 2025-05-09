@@ -439,6 +439,7 @@ export function playNextAtBat(gameTeams) {
     const closerMinInning = Math.max(1, CONFIG.innings - 1);
 
     if (pitcherStaminaPercent < CONFIG.stamina.penaltyThreshold2 && currentPitcher.role !== "Closer") {
+    if (currentPitcher.currentStamina < 30 && currentPitcher.role !== "Closer") {
          if (gameState.currentInning >= closerMinInning && fieldingTeam.pitchers.closer) { potentialNewPitcher = fieldingTeam.pitchers.closer; }
          else if (fieldingTeam.pitchers.reliever) { potentialNewPitcher = fieldingTeam.pitchers.reliever; }
     } else if (pitcherStaminaPercent < CONFIG.stamina.penaltyThreshold1 && currentPitcher.role === "Starter" && gameState.currentInning > 3) {

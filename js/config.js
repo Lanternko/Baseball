@@ -9,11 +9,14 @@ export const CONFIG = {
     },
     stamina: {
         penaltyThreshold1: 0.50,
-        penaltyAmount1: 1,
-        penaltyThreshold2: 0.30,
+        penaltyAmount1: 1.5,
+        penaltyThreshold2: 0.32,
         penaltyAmount2: 2,
-        depletionPerBatterMin: 2,
-        depletionPerBatterMax: 4
+        depletionPerBatterMin: 2.5,
+        depletionPerBatterMax: 4.5,
+        hitPenaltySingle: 8,
+        hitPenaltyExtraBase: 7,
+        runPenalty: 10       // 每失 1 分
     },
     speed: {
         stretchSingleToDoubleFast: 0.30,
@@ -38,17 +41,17 @@ export const CONFIG = {
         }
     },
     statNormalization: {
-        pitcherPowerEffectOnSO: 0.027,
-        velocityEffectOnSO: 0.022,
-        velocityEffectOnHit: -0.017,
-        techniqueEffectOnHR: -0.015,
-        techniqueEffectOnSO: 0.01, // Slight increase with technique
-        batterContactEffectOnSO: -0.030,
-        pitcherControlEffectOnWalk: -0.025,
-        batterPowerEffectOnHR: 0.011,
-        pitcherPowerEffectOnHR: -0.0025,
-        batterHitRateEffectOnHit: 0.025,
-        pitcherPowerEffectOnHit: -0.017
+        pitcherPowerEffectOnSO: 0.024,
+        velocityEffectOnSO: 0.020,
+        velocityEffectOnHit: -0.015,
+        techniqueEffectOnHR: -0.013,
+        techniqueEffectOnSO: 0.008, // Slight increase with technique
+        batterContactEffectOnSO: -0.033,
+        pitcherControlEffectOnWalk: -0.023,
+        batterPowerEffectOnHR: 0.015,
+        pitcherPowerEffectOnHR: -0.0023,
+        batterHitRateEffectOnHit: 0.031,
+        pitcherPowerEffectOnHit: -0.015
     },
     probabilityCaps: {
         strikeout: { min: 0.05, max: 0.50 },
