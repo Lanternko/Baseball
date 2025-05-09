@@ -15,9 +15,9 @@
             <div class="current-player-display" id="awayCurrentPlayerDisplay">
                 </div>
             <h4>Lineup</h4>
-            <ul id="awayTeamLineupList">
+            <ul id="awayTeamLineupList" class="lineup-list">
                 </ul>
-            <h4 class="bullpen-title">Bullpen</h4>
+            <h4 class="bullpen-title">Pitchers</h4>
             <ul id="awayTeamBullpenList" class="bullpen-list">
                 </ul>
         </div>
@@ -88,7 +88,11 @@
              <div class="game-controls">
                 <button id="startGameButton">Start New Game</button>
                 <button id="nextPlayButton" style="display:none;">Next Batter</button>
+                <div class="simulation-controls" style="display:none;"> <button id="simInningButton">Sim Inning</button>
+                    <button id="simGameButton">Sim Game</button>
+                    <button id="sim10GamesButton">Sim 10 Games</button>
                 </div>
+            </div>
         </div>
 
         <div class="team-panel" id="homeTeamPanel">
@@ -96,9 +100,9 @@
             <div class="current-player-display" id="homeCurrentPlayerDisplay">
                 </div>
             <h4>Lineup</h4>
-            <ul id="homeTeamLineupList">
+            <ul id="homeTeamLineupList" class="lineup-list">
                 </ul>
-            <h4 class="bullpen-title">Bullpen</h4>
+            <h4 class="bullpen-title">Pitchers</h4>
             <ul id="homeTeamBullpenList" class="bullpen-list">
                 </ul>
         </div>

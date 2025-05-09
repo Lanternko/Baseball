@@ -5,6 +5,9 @@ export const DOM_ELEMENTS = {
     // Game Controls
     startGameButton: document.getElementById('startGameButton'),
     nextPlayButton: document.getElementById('nextPlayButton'),
+    // Simulation Controls Container
+    simulationControlsContainer: document.querySelector('.simulation-controls'), // Get the container
+    // Simulation Buttons
     simInningButton: document.getElementById('simInningButton'),
     simGameButton: document.getElementById('simGameButton'),
     sim10GamesButton: document.getElementById('sim10GamesButton'),
@@ -113,6 +116,12 @@ export function initializeUI(gameTeams, teamRecords) {
 
     if(DOM_ELEMENTS.awayTeamPanel) DOM_ELEMENTS.awayTeamPanel.className = 'team-panel';
     if(DOM_ELEMENTS.homeTeamPanel) DOM_ELEMENTS.homeTeamPanel.className = 'team-panel';
+    
+    // Hide simulation controls initially
+    if (DOM_ELEMENTS.simulationControlsContainer) {
+        DOM_ELEMENTS.simulationControlsContainer.style.display = 'none';
+    }
+
 
     updateStandingsDisplay(teamRecords);
 }
@@ -298,7 +307,7 @@ function displayCurrentPlayer(player, isBatter, targetElement) {
     } else { // Pitcher
         const outs = player.careerOutsRecorded || 0;
         const runs = player.careerRunsAllowed || 0;
-        const ra9 = outs > 0 ? (runs / outs * 27) : 0; // RA9 (equivalent to ERA if all runs are earned)
+        const ra9 = outs > 0 ? (runs / outs * 27) : 0; 
         const so = player.careerStrikeouts || 0;
         careerStatString = `ERA: ${outs > 0 ? ra9.toFixed(2) : 'N/A'} / SO: ${so}`;
         const staminaFilledPercent = player.maxStamina > 0 ? (player.currentStamina / player.maxStamina * 100) : 0;
@@ -307,7 +316,7 @@ function displayCurrentPlayer(player, isBatter, targetElement) {
             <span class="stat-label">POW</span><span class="stat-value ${getStatColorClass(player.power)}">${player.power}</span>
             <span class="stat-label">CON</span><span class="stat-value ${getStatColorClass(player.control)}">${player.control}</span>
             <span class="stat-label">VEL</span><span class="stat-value ${getStatColorClass(player.velocity)}">${player.velocity}</span>
-            <span class="stat-label">TECH</span><span class="stat-value ${getStatColorClass(player.technique)}">${player.technique}</span>
+            <span class="stat-label">TEC</span><span class="stat-value ${getStatColorClass(player.technique)}">${player.technique}</span>
             <span class="stat-label">STM</span>
             <div class="stamina-bar-container">
                 <div class="stamina-empty" style="width:${100 - staminaFilledPercent.toFixed(1)}%"></div>
@@ -334,7 +343,7 @@ function displaySingleTeamLineupList(teamKey, gameTeamsData, currentActiveBatter
     if (!team || !team.batters || !listElement) return;
 
     listElement.innerHTML = '';
-    team.batters.forEach((batter) => { // Removed index, as batting order number is removed
+    team.batters.forEach((batter) => { 
         const listItem = document.createElement('li');
         if (batter === currentActiveBatter) {
             listItem.classList.add('current-batter-in-lineup');
@@ -350,7 +359,7 @@ function displaySingleTeamLineupList(teamKey, gameTeamsData, currentActiveBatter
 
         listItem.innerHTML = `
             <span class="player-ovr-lineup ${ovrClass}">${batter.ovr}</span>
-            <span class="player-name-lineup ${ovrClass}">${batter.name}</span> 
+            <span class="player-name-lineup ${ovrClass}">${batter.name}</span>
             <span class="batter-career-stats">${avgString} / ${hr}HR</span>
         `;
         listElement.appendChild(listItem);
@@ -362,24 +371,21 @@ export function displayTeamBullpen(teamKey, gameTeamsData, activePitcher) {
     const listElement = teamKey === 'away' ? DOM_ELEMENTS.awayTeamBullpenList : DOM_ELEMENTS.homeTeamBullpenList;
 
     if (!team || !team.pitchers || !listElement) {
-        if (listElement) listElement.innerHTML = '<li>Bullpen data not available.</li>';
+        if (listElement) listElement.innerHTML = '<li>Pitcher data not available.</li>';
         return;
     }
 
     listElement.innerHTML = ''; 
 
     const bullpenPitchers = [];
-    // Add all pitcher roles to the bullpen display list
     if (team.pitchers.starter) bullpenPitchers.push(team.pitchers.starter);
     if (team.pitchers.reliever) bullpenPitchers.push(team.pitchers.reliever);
     if (team.pitchers.closer) bullpenPitchers.push(team.pitchers.closer);
     
-    // Filter out any null/undefined pitchers just in case
     const validBullpenPitchers = bullpenPitchers.filter(p => p);
 
-
     if (validBullpenPitchers.length === 0) {
-        listElement.innerHTML = '<li>No pitchers in bullpen.</li>';
+        listElement.innerHTML = '<li>No pitchers available.</li>';
         return;
     }
 
@@ -389,10 +395,8 @@ export function displayTeamBullpen(teamKey, gameTeamsData, activePitcher) {
         
         const outs = pitcher.careerOutsRecorded || 0;
         const runs = pitcher.careerRunsAllowed || 0;
-        // Calculate ERA (RA9: Runs Allowed per 9 innings = 27 outs)
         const era = outs > 0 ? (runs / outs * 27) : 0;
         const eraString = outs > 0 ? era.toFixed(2) : "N/A";
-
 
         if (activePitcher && activePitcher.name === pitcher.name && activePitcher.role === pitcher.role) {
             listItem.classList.add('active-pitcher-in-bullpen');
@@ -432,10 +436,8 @@ export function updateAllDisplays(gameState, gameTeams, teamRecords) {
     const currentBatterForDisplay = gameState.activeBatter;
     const currentPitcherForDisplay = gameState.activePitcher;
 
-    // Update battingOrder for current batter display (not for lineup list)
     if (currentBatterForDisplay && gameTeams[battingTeamKey] && gameTeams[battingTeamKey].batters) {
         const currentBatterActualIndex = gameTeams[battingTeamKey].batters.findIndex(b => b.name === currentBatterForDisplay.name);
-        // This property is only for the current player display card, not the lineup list.
         currentBatterForDisplay.battingOrder = (currentBatterActualIndex !== -1) ? currentBatterActualIndex + 1 : '?';
     }
 

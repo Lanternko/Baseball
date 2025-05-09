@@ -322,7 +322,7 @@ function processAtBatOutcome(atBatOutcome, gameTeams) {
 // changeHalfInning, endGame, playNextAtBat functions remain the same as your provided version
 // Ensure they correctly use the updated gameTeams and gameState structures.
 // --- START: Copy of your changeHalfInning ---
-function changeHalfInning(gameTeams) {
+export function changeHalfInning(gameTeams) {
     const teamThatBattedKey = gameState.halfInning === 'top' ? 'away' : 'home';
     const teamThatBatted = gameTeams[teamThatBattedKey];
     const inningIndex = gameState.currentInning - 1;
@@ -367,7 +367,7 @@ function changeHalfInning(gameTeams) {
 // --- END: Copy of your changeHalfInning ---
 
 // --- START: Copy of your endGame ---
-function endGame(gameTeams, customMessage = "") {
+export function endGame(gameTeams, customMessage = "") {
     if (gameState.gameOver) return;
     gameState.gameOver = true;
     let winnerKey = null;
