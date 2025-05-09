@@ -32,20 +32,20 @@ export const DOM_ELEMENTS = {
     firstBaseVisual: document.getElementById('firstBase'),
     secondBaseVisual: document.getElementById('secondBase'),
     thirdBaseVisual: document.getElementById('thirdBase'),
-    pitcherOnMoundName: document.getElementById('pitcherOnMoundName'), // Span inside mound div
+    // pitcherOnMoundName: document.getElementById('pitcherOnMoundName'), // Not currently used, can be removed if no element
     runnerName1B: document.getElementById('runnerName1B'),
     runnerName2B: document.getElementById('runnerName2B'),
     runnerName3B: document.getElementById('runnerName3B'),
-    scoreFlashElement: document.getElementById('scoreFlash'), // For scoring effect
+    scoreFlashElement: document.getElementById('scoreFlash'),
 
     // At-Bat Outcome
     outcomeText: document.getElementById('outcome-text'),
 
-    // Team Panels
+    // Team Panels (Desktop)
     awayTeamPanel: document.getElementById('awayTeamPanel'),
     homeTeamPanel: document.getElementById('homeTeamPanel'),
-    awayTeamNameDisplayElement: document.getElementById('awayTeamNameDisplay'),
-    homeTeamNameDisplayElement: document.getElementById('homeTeamNameDisplay'),
+    awayTeamNameDisplayElement: document.getElementById('awayTeamNameDisplay'), // h3 inside awayTeamPanel
+    homeTeamNameDisplayElement: document.getElementById('homeTeamNameDisplay'), // h3 inside homeTeamPanel
     awayCurrentPlayerDisplay: document.getElementById('awayCurrentPlayerDisplay'),
     homeCurrentPlayerDisplay: document.getElementById('homeCurrentPlayerDisplay'),
     awayTeamLineupList: document.getElementById('awayTeamLineupList'),
@@ -54,23 +54,34 @@ export const DOM_ELEMENTS = {
     // Mobile Displays
     mobileBatterDisplay: document.getElementById('mobileBatterDisplay'),
     mobilePitcherDisplay: document.getElementById('mobilePitcherDisplay'),
+
+    // Standings Spans (ensure these IDs exist in your HTML within the h3s)
+    awayTeamRecordSpan: document.getElementById('awayTeamRecord'),
+    homeTeamRecordSpan: document.getElementById('homeTeamRecord'),
 };
 
 // --- UI Initialization ---
-export function initializeUI(gameTeams) {
-    // Team Names
+// Accepts gameTeams (with player data) and teamRecords (W-L)
+export function initializeUI(gameTeams, teamRecords) {
+    // Team Names (Scoreboard and Panels)
     if (DOM_ELEMENTS.awayTeamScoreboardName && gameTeams.away) DOM_ELEMENTS.awayTeamScoreboardName.textContent = gameTeams.away.name;
     if (DOM_ELEMENTS.homeTeamScoreboardName && gameTeams.home) DOM_ELEMENTS.homeTeamScoreboardName.textContent = gameTeams.home.name;
-    if (DOM_ELEMENTS.awayTeamNameDisplayElement && gameTeams.away) DOM_ELEMENTS.awayTeamNameDisplayElement.textContent = gameTeams.away.name;
-    if (DOM_ELEMENTS.homeTeamNameDisplayElement && gameTeams.home) DOM_ELEMENTS.homeTeamNameDisplayElement.textContent = gameTeams.home.name;
+    
+    // Update team names in panels, preserving the record span
+    if (DOM_ELEMENTS.awayTeamNameDisplayElement && gameTeams.away) {
+        DOM_ELEMENTS.awayTeamNameDisplayElement.childNodes[0].nodeValue = gameTeams.away.name + " ";
+    }
+    if (DOM_ELEMENTS.homeTeamNameDisplayElement && gameTeams.home) {
+        DOM_ELEMENTS.homeTeamNameDisplayElement.childNodes[0].nodeValue = gameTeams.home.name + " ";
+    }
 
-    // Reset Displays
+    // Reset Game State Displays
     if(DOM_ELEMENTS.inningIndicator) DOM_ELEMENTS.inningIndicator.className = 'inning-indicator';
     if(DOM_ELEMENTS.inningNumber) DOM_ELEMENTS.inningNumber.textContent = '-';
     if(DOM_ELEMENTS.outLights) DOM_ELEMENTS.outLights.forEach(light => light.classList.remove('active'));
-    if(DOM_ELEMENTS.outcomeText) { DOM_ELEMENTS.outcomeText.textContent = "Click 'Start New Game' to begin!"; DOM_ELEMENTS.outcomeText.className = ''; }
+    if(DOM_ELEMENTS.outcomeText) { DOM_ELEMENTS.outcomeText.innerHTML = "Click 'Start New Game' to begin!"; DOM_ELEMENTS.outcomeText.className = ''; }
 
-    // Clear Scoreboard
+    // Clear Scoreboard Details
     const awayCells = DOM_ELEMENTS.awayTeamScoreCells;
     const homeCells = DOM_ELEMENTS.homeTeamScoreCells;
     for (let i = 1; i <= CONFIG.innings; i++) {
@@ -84,60 +95,65 @@ export function initializeUI(gameTeams) {
     if (DOM_ELEMENTS.awayTeamTotalErrorsCell) DOM_ELEMENTS.awayTeamTotalErrorsCell.textContent = '0';
     if (DOM_ELEMENTS.homeTeamTotalErrorsCell) DOM_ELEMENTS.homeTeamTotalErrorsCell.textContent = '0';
 
-    // Clear Bases (Keep labels, remove runner names)
-    if(DOM_ELEMENTS.firstBaseVisual) DOM_ELEMENTS.firstBaseVisual.querySelector('.base-label').textContent = '1B';
-    if(DOM_ELEMENTS.secondBaseVisual) DOM_ELEMENTS.secondBaseVisual.querySelector('.base-label').textContent = '2B';
-    if(DOM_ELEMENTS.thirdBaseVisual) DOM_ELEMENTS.thirdBaseVisual.querySelector('.base-label').textContent = '3B';
+    // Clear Bases Visuals
+    if(DOM_ELEMENTS.firstBaseVisual) DOM_ELEMENTS.firstBaseVisual.classList.remove('occupied-base');
+    if(DOM_ELEMENTS.secondBaseVisual) DOM_ELEMENTS.secondBaseVisual.classList.remove('occupied-base');
+    if(DOM_ELEMENTS.thirdBaseVisual) DOM_ELEMENTS.thirdBaseVisual.classList.remove('occupied-base');
     if(DOM_ELEMENTS.runnerName1B) { DOM_ELEMENTS.runnerName1B.textContent = ''; DOM_ELEMENTS.runnerName1B.style.display = 'none'; }
     if(DOM_ELEMENTS.runnerName2B) { DOM_ELEMENTS.runnerName2B.textContent = ''; DOM_ELEMENTS.runnerName2B.style.display = 'none'; }
     if(DOM_ELEMENTS.runnerName3B) { DOM_ELEMENTS.runnerName3B.textContent = ''; DOM_ELEMENTS.runnerName3B.style.display = 'none'; }
-    if(DOM_ELEMENTS.pitcherOnMoundName) DOM_ELEMENTS.pitcherOnMoundName.textContent = 'P';
 
-
-    // Clear Panels
+    // Clear Player Display Panels
+    const waitingMessage = '<p style="text-align:center; color:#777; font-style:italic;">Waiting...</p>';
     if(DOM_ELEMENTS.awayTeamLineupList) DOM_ELEMENTS.awayTeamLineupList.innerHTML = '';
     if(DOM_ELEMENTS.homeTeamLineupList) DOM_ELEMENTS.homeTeamLineupList.innerHTML = '';
-    if(DOM_ELEMENTS.awayCurrentPlayerDisplay) DOM_ELEMENTS.awayCurrentPlayerDisplay.innerHTML = 'Waiting...';
-    if(DOM_ELEMENTS.homeCurrentPlayerDisplay) DOM_ELEMENTS.homeCurrentPlayerDisplay.innerHTML = 'Waiting...';
-    if(DOM_ELEMENTS.awayTeamPanel) DOM_ELEMENTS.awayTeamPanel.className = 'team-panel'; // Reset panel colors
+    if(DOM_ELEMENTS.awayCurrentPlayerDisplay) DOM_ELEMENTS.awayCurrentPlayerDisplay.innerHTML = waitingMessage;
+    if(DOM_ELEMENTS.homeCurrentPlayerDisplay) DOM_ELEMENTS.homeCurrentPlayerDisplay.innerHTML = waitingMessage;
+    if(DOM_ELEMENTS.mobileBatterDisplay) DOM_ELEMENTS.mobileBatterDisplay.innerHTML = waitingMessage;
+    if(DOM_ELEMENTS.mobilePitcherDisplay) DOM_ELEMENTS.mobilePitcherDisplay.innerHTML = waitingMessage;
+
+    // Reset Team Panel Styles
+    if(DOM_ELEMENTS.awayTeamPanel) DOM_ELEMENTS.awayTeamPanel.className = 'team-panel';
     if(DOM_ELEMENTS.homeTeamPanel) DOM_ELEMENTS.homeTeamPanel.className = 'team-panel';
+
+    updateStandingsDisplay(teamRecords);
 }
 
+
 // --- Core UI Update Functions ---
-
-function abbreviatePlayerName(fullName, maxLength = 16, panelWidthChars = 15) { // panelWidthChars 是估計值
-    if (fullName.length <= panelWidthChars) { // 如果名字本身就夠短，直接用
-        return fullName;
-    }
-
+function abbreviatePlayerName(fullName, maxLength = 16, panelWidthChars = 15) {
+    if (fullName.length <= panelWidthChars) { return fullName; }
     const parts = fullName.split(' ');
-    if (parts.length > 1) { // 至少有姓和名
-        // 嘗試 "F. LastName"
+    if (parts.length > 1) {
         let abbreviated = `${parts[0][0]}. ${parts.slice(-1)[0]}`;
-        if (abbreviated.length <= maxLength) {
-            return abbreviated;
-        }
-        // 如果 "F. LastName" 還是太長，嘗試截斷 LastName 部分
-        const lastNamePartLength = maxLength - 3; // 3 for "F. "
+        if (abbreviated.length <= maxLength) { return abbreviated; }
+        const lastNamePartLength = maxLength - 3; // For "F. "
         if (parts.slice(-1)[0].length > lastNamePartLength) {
-             abbreviated = `${parts[0][0]}. ${parts.slice(-1)[0].substring(0, Math.max(1,lastNamePartLength-3))}...`;
+             abbreviated = `${parts[0][0]}. ${parts.slice(-1)[0].substring(0, Math.max(1,lastNamePartLength-3))}...`; // Ensure substring doesn't go negative
              return abbreviated;
         }
-        return fullName.substring(0, maxLength - 3) + "..."; // Fallback to simple truncate of full name
+        // If "F. LastName" is still too long but LastName itself wasn't the issue, truncate fullName
+        return fullName.substring(0, maxLength - 3) + "...";
     }
-    // 單詞名字，直接截斷
-    return fullName.substring(0, maxLength - 3) + "...";
+    return fullName.substring(0, maxLength - 3) + "..."; // Single word name
 }
 
 function highlightCurrentInningOnScoreboard(currentInning, gameStarted, gameOver, halfInning) {
     if (!DOM_ELEMENTS.scoreboardTable) return;
-    DOM_ELEMENTS.scoreboardTable.querySelectorAll('th, td').forEach(cell => cell.classList.remove('current-inning-active'));
+    DOM_ELEMENTS.scoreboardTable.querySelectorAll('thead th, tbody td').forEach(cell => cell.classList.remove('current-inning-active'));
+
     if (gameStarted && !gameOver && currentInning >= 1 && currentInning <= CONFIG.innings) {
-        const inningColumnIndex = currentInning;
-        const headers = DOM_ELEMENTS.scoreboardTable.querySelectorAll('th');
-        if (headers?.[inningColumnIndex]) headers[inningColumnIndex].classList.add('current-inning-active');
+        const inningColumnIndex = currentInning; // This assumes inning columns start after "Team" (index 0)
+
+        const headers = DOM_ELEMENTS.scoreboardTable.querySelectorAll('thead th');
+        if (headers && headers.length > inningColumnIndex) { // Check if header exists at this index
+            headers[inningColumnIndex].classList.add('current-inning-active');
+        }
+
         const activeRowCells = halfInning === 'top' ? DOM_ELEMENTS.awayTeamScoreCells : DOM_ELEMENTS.homeTeamScoreCells;
-        if (activeRowCells?.[inningColumnIndex]) activeRowCells[inningColumnIndex].classList.add('current-inning-active');
+        if (activeRowCells && activeRowCells.length > inningColumnIndex) { // Check if cell exists
+            activeRowCells[inningColumnIndex].classList.add('current-inning-active');
+        }
     }
 }
 
@@ -145,8 +161,8 @@ export function updateInningDisplay(halfInning, currentInning, gameStarted, game
     if (!DOM_ELEMENTS.inningIndicator || !DOM_ELEMENTS.inningNumber) return;
     if (!gameStarted) { DOM_ELEMENTS.inningIndicator.className = 'inning-indicator'; DOM_ELEMENTS.inningNumber.textContent = '-'; return; }
     if (gameOver) { DOM_ELEMENTS.inningIndicator.className = 'inning-indicator'; DOM_ELEMENTS.inningNumber.textContent = 'Final'; return; }
-    DOM_ELEMENTS.inningIndicator.className = `inning-indicator ${halfInning}`;
-    DOM_ELEMENTS.inningNumber.textContent = currentInning;
+    DOM_ELEMENTS.inningIndicator.className = `inning-indicator ${halfInning}`; // 'top' or 'bottom'
+    DOM_ELEMENTS.inningNumber.textContent = String(currentInning);
 }
 
 export function updateOutsDisplay(outs) {
@@ -157,15 +173,17 @@ export function updateOutsDisplay(outs) {
 }
 
 export function updateScoreboard(gameTeams, currentInning, halfInning, outs, gameStarted, gameOver) {
-    if (!gameTeams) return;
+    if (!gameTeams || !gameTeams.away || !gameTeams.home) { console.error("Team data missing for scoreboard update."); return; }
+
     const awayTeamData = gameTeams.away;
     const homeTeamData = gameTeams.home;
     const awayCells = DOM_ELEMENTS.awayTeamScoreCells;
     const homeCells = DOM_ELEMENTS.homeTeamScoreCells;
+
     if (!awayCells || !homeCells) { console.error("Scoreboard cells not found."); return; }
 
-    const shouldShowDash = (teamData, inningIndex) => { /* ... same logic ... */
-        const inningNum = inningIndex + 1;
+    const shouldShowDash = (teamData, inningIndex) => {
+        const inningNum = inningIndex + 1; // inningIndex is 0-based
         if (!gameStarted || inningNum > currentInning) return true;
         if (inningNum === currentInning) {
             if (teamData === awayTeamData && halfInning === 'top' && !gameOver) return true;
@@ -176,7 +194,7 @@ export function updateScoreboard(gameTeams, currentInning, halfInning, outs, gam
     };
 
     for (let i = 0; i < CONFIG.innings; i++) {
-        const cellIndex = i + 1;
+        const cellIndex = i + 1; // Score cells are 1-indexed in the HTMLCollection (after team name)
         if (awayCells[cellIndex]) {
             const runs = awayTeamData.scorePerInning[i];
             awayCells[cellIndex].textContent = shouldShowDash(awayTeamData, i) ? '-' : (runs ?? 0);
@@ -197,121 +215,108 @@ export function updateScoreboard(gameTeams, currentInning, halfInning, outs, gam
     highlightCurrentInningOnScoreboard(currentInning, gameStarted, gameOver, halfInning);
 }
 
-// UI #2 & #5: Update bases (no home plate, rotated labels handled by CSS)
 export function updateBasesDisplay(bases, activePitcher) {
     const runnerNameElements = [DOM_ELEMENTS.runnerName1B, DOM_ELEMENTS.runnerName2B, DOM_ELEMENTS.runnerName3B];
     const baseElements = [DOM_ELEMENTS.firstBaseVisual, DOM_ELEMENTS.secondBaseVisual, DOM_ELEMENTS.thirdBaseVisual];
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 3; i++) { // 0: 1B, 1: 2B, 2: 3B
         const nameEl = runnerNameElements[i];
         const baseEl = baseElements[i];
         if (!nameEl || !baseEl) continue;
 
-        if (bases[i]) {
-            nameEl.textContent = bases[i].name;
+        if (bases[i]) { // bases is an array like [runnerOn1B, runnerOn2B, runnerOn3B]
+            nameEl.textContent = abbreviatePlayerName(bases[i].name, 10, 8); // Abbreviate for base display
             nameEl.style.display = 'block';
-            baseEl.classList.add('occupied-base'); // 添加類別
+            baseEl.classList.add('occupied-base');
         } else {
             nameEl.textContent = '';
             nameEl.style.display = 'none';
-            baseEl.classList.remove('occupied-base'); // 移除類別
+            baseEl.classList.remove('occupied-base');
         }
     }
-
 }
 
-// UI #4: Helper function for stat colors (Updated for text color)
 function getStatColorClass(value) {
     if (value === undefined || value === null) return '';
-    if (value <= CONFIG.statColors.low) return 'stat-low';       // Gray text
-    if (value <= CONFIG.statColors.medium) return 'stat-medium'; // Green text
-    if (value <= CONFIG.statColors.high) return 'stat-high';    // Yellow text
-    return 'stat-elite'; // Red text
+    if (value <= CONFIG.statColors.low) return 'stat-low';
+    if (value <= CONFIG.statColors.medium) return 'stat-medium';
+    if (value <= CONFIG.statColors.high) return 'stat-high';
+    return 'stat-elite';
 }
 
-// UI #6: Abbreviate pitcher role
 function getPitcherRoleAbbreviation(role) {
     switch (role?.toLowerCase()) {
         case 'starter': return 'SP';
         case 'reliever': return 'RP';
         case 'closer': return 'CP';
-        default: return role || '?';
+        default: return role || '?'; // Return original role or '?' if undefined
     }
 }
 
-// UI #1, #3.1, #4, #6: Display current player details
 function displayCurrentPlayer(player, isBatter, targetElement) {
     if (!targetElement) return;
     targetElement.innerHTML = '';
+
     if (!player) {
-        targetElement.innerHTML = `<p>${isBatter ? 'Batter' : 'Pitcher'} info not available.</p>`;
+        targetElement.innerHTML = `<p style="text-align:center; color:#777; font-style:italic;">${isBatter ? 'Batter' : 'Pitcher'} info not available.</p>`;
         return;
     }
 
-    // --- START: MODIFIED PART for h5 content ---
-    
-    const roleAbbrev = getPitcherRoleAbbreviation(player.role);
-    const roleOrPosition = isBatter ? `(#${player.battingOrder || '?'})` : `(${roleAbbrev})`;
-
-    const nameString = player.name; // Or your abbreviatePlayerName(player.name)
+    const nameString = player.name;
     const roleUiString = isBatter ? `(#${player.battingOrder || '?'})` : `(${getPitcherRoleAbbreviation(player.role)})`;
     const ovrUiString = `OVR: ${player.ovr}`;
-    // ... (statsGridHTML logic) ...
-    // ... (historyHTML logic) ...
-    // --- END: MODIFIED PART for h5 content ---
-    let historyHTML = '';
-
+    let careerStatString = '';
     let statsGridHTML = '';
+    let historyDisplayHTML = ''; // Renamed to avoid conflict if historyHTML was global
 
-    // UI #3: Stat Number Styling (Black background, colored text)
-   if (isBatter) {
+    if (isBatter) {
+        const avg = (player.careerAtBats || 0) > 0 ? ((player.careerHits || 0) / player.careerAtBats) : 0;
+        careerStatString = `AVG: ${avg.toFixed(3).replace(/^0/, '')}`;
         statsGridHTML = `
             <span class="stat-label">POW</span><span class="stat-value ${getStatColorClass(player.power)}">${player.power}</span>
             <span class="stat-label">HIT</span><span class="stat-value ${getStatColorClass(player.hitRate)}">${player.hitRate}</span>
             <span class="stat-label">CON</span><span class="stat-value ${getStatColorClass(player.contact)}">${player.contact}</span>
             <span class="stat-label">SPD</span><span class="stat-value ${getStatColorClass(player.speed)}">${player.speed}</span>
         `;
-        const history = player.atBatHistory || [];
-        const historyItems = history.map(item => `<span>${item}</span>`).join(' ');
-        historyHTML = `History: ${history.length > 0 ? historyItems : 'N/A'}`;
-    }  else { // Pitcher
-        const filled = player.currentStamina / player.maxStamina * 100;
-        const empty  = 100 - filled;
+        const gameHistory = player.atBatHistory || [];
+        const historyItems = gameHistory.map(item => `<span>${item}</span>`).join(' ');
+        // Only show history div if there are items, and only for non-mobile (desktop) view
+        if (gameHistory.length > 0 && targetElement !== DOM_ELEMENTS.mobileBatterDisplay) {
+             historyDisplayHTML = `<div class="player-history">History: ${historyItems}</div>`;
+        }
+    } else { // Pitcher
+        const outs = player.careerOutsRecorded || 0;
+        const runs = player.careerRunsAllowed || 0;
+        const ra9 = outs > 0 ? (runs / outs * 27) : 0;
+        careerStatString = `ERA: ${outs > 0 ? ra9.toFixed(2) : 'N/A'}`;
+
+        const staminaFilledPercent = player.maxStamina > 0 ? (player.currentStamina / player.maxStamina * 100) : 0;
+        const staminaEmptyPercent = 100 - staminaFilledPercent;
         statsGridHTML = `
-        <span class="stat-label">POW</span><span class="stat-value ${getStatColorClass(player.power)}">${player.power}</span>
-        <span class="stat-label">CON</span><span class="stat-value ${getStatColorClass(player.control)}">${player.control}</span>
-        <span class="stat-label">VEL</span><span class="stat-value ${getStatColorClass(player.velocity)}">${player.velocity}</span>
-        <span class="stat-label">TEC</span><span class="stat-value ${getStatColorClass(player.technique)}">${player.technique}</span>
-        <span class="stat-label">STM</span>
-        <div class="stamina-bar-container">
-            <div class="stamina-empty" style="width:${empty}%"></div>
-            <span class="stamina-text">
-                ${player.currentStamina}/${player.maxStamina}
-            </span>
-        </div>
+            <span class="stat-label">POW</span><span class="stat-value ${getStatColorClass(player.power)}">${player.power}</span>
+            <span class="stat-label">CON</span><span class="stat-value ${getStatColorClass(player.control)}">${player.control}</span>
+            <span class="stat-label">VEL</span><span class="stat-value ${getStatColorClass(player.velocity)}">${player.velocity}</span>
+            <span class="stat-label">TEC</span><span class="stat-value ${getStatColorClass(player.technique)}">${player.technique}</span>
+            <span class="stat-label">STM</span>
+            <div class="stamina-bar-container">
+                <div class="stamina-empty" style="width:${staminaEmptyPercent.toFixed(1)}%"></div>
+                <span class="stamina-text">${player.currentStamina}/${player.maxStamina}</span>
+            </div>
         `;
     }
 
-    // --- START: UPDATED innerHTML assignment for targetElement ---
     targetElement.innerHTML = `
         <h5>
             <span class="player-main-name">${nameString}</span>
             <span class="player-role-info">${roleUiString}</span>
             <span class="player-ovr-info">${ovrUiString}</span>
+            <span class="player-career-stat">${careerStatString}</span>
         </h5>
         <div class="player-stats-detailed">${statsGridHTML}</div>
-        ${isBatter ? `<div class="player-history">${historyHTML}</div>` : ''}
+        ${historyDisplayHTML}
     `;
-    // --- END: UPDATED innerHTML assignment ---
 }
 
-function getStaminaGradientColor() {
-    return 'linear-gradient(to right, red, orange 10%, limegreen 80%)';
-}
-
-
-
-// UI #3 & #4: Update lineup list (highlight CURRENT batter + score)
 function displaySingleTeamLineupList(teamKey, gameTeamsData, currentActiveBatter) {
     const team = gameTeamsData[teamKey];
     const listElement = teamKey === 'away' ? DOM_ELEMENTS.awayTeamLineupList : DOM_ELEMENTS.homeTeamLineupList;
@@ -321,7 +326,6 @@ function displaySingleTeamLineupList(teamKey, gameTeamsData, currentActiveBatter
     team.batters.forEach((batter, index) => {
         const listItem = document.createElement('li');
         const battingOrder = index + 1;
-        // Highlight the batter *currently* at bat
         if (batter === currentActiveBatter) {
             listItem.classList.add('current-batter-in-lineup');
         }
@@ -338,56 +342,48 @@ function displaySingleTeamLineupList(teamKey, gameTeamsData, currentActiveBatter
     });
 }
 
-// UI #5: Score Flash Effect
 export function triggerScoreFlash(runsScored) {
     if (!DOM_ELEMENTS.scoreFlashElement || runsScored <= 0) return;
-
     DOM_ELEMENTS.scoreFlashElement.textContent = `+${runsScored} Run${runsScored > 1 ? 's' : ''}!`;
     DOM_ELEMENTS.scoreFlashElement.classList.add('show');
-
-    // Remove the class after the animation finishes
     setTimeout(() => {
         DOM_ELEMENTS.scoreFlashElement.classList.remove('show');
-    }, 600); // Duration should match CSS transition + a little buffer
+    }, 600); // Match CSS transition duration
 }
 
+export function updateAllDisplays(gameState, gameTeams, teamRecords) {
+    if (!gameState || !gameTeams) { console.error("Missing gameState or gameTeams for updateAllDisplays"); return; }
 
-export function updateAllDisplays(gameState, gameTeams) {
-    if (!gameState || !gameTeams) { console.error("Missing gameState or gameTeams"); return; }
+    const isMobileView = window.innerWidth <= 768;
 
-    const isMobileView = window.innerWidth <= 768; // 簡單的寬度判斷
-
-    // Update Inning/Outs/Bases/Scoreboard
     updateInningDisplay(gameState.halfInning, gameState.currentInning, gameState.gameStarted, gameState.gameOver);
     updateOutsDisplay(gameState.outs);
     updateBasesDisplay(gameState.bases, gameState.activePitcher);
-    updateScoreboard(gameTeams, gameState.currentInning, gameState.halfInning, gameState.outs, gameState.gameStarted, gameState.gameOver); // Scoreboard 更新邏輯不變，CSS 會處理顯示
+    updateScoreboard(gameTeams, gameState.currentInning, gameState.halfInning, gameState.outs, gameState.gameStarted, gameState.gameOver);
 
     const battingTeamKey = gameState.halfInning === 'top' ? 'away' : 'home';
-    const fieldingTeamKey = gameState.halfInning === 'top' ? 'home' : 'away';
-    const battingTeam = gameTeams[battingTeamKey];
+    // const fieldingTeamKey = gameState.halfInning === 'top' ? 'home' : 'away'; // Not directly used below
     const currentBatterForDisplay = gameState.activeBatter;
     const currentPitcherForDisplay = gameState.activePitcher;
 
-    if (currentBatterForDisplay && battingTeam && battingTeam.batters) {
-        const currentBatterActualIndex = battingTeam.batters.findIndex(b => b === currentBatterForDisplay);
+    // Ensure battingOrder is set on the batter object if it exists
+    if (currentBatterForDisplay && gameTeams[battingTeamKey] && gameTeams[battingTeamKey].batters) {
+        const currentBatterActualIndex = gameTeams[battingTeamKey].batters.findIndex(b => b.name === currentBatterForDisplay.name); // Match by name for safety
         currentBatterForDisplay.battingOrder = (currentBatterActualIndex !== -1) ? currentBatterActualIndex + 1 : '?';
     }
 
+    updateStandingsDisplay(teamRecords);
+
     if (isMobileView) {
-        // 手機版面：更新到 mobile display divs
-        if (DOM_ELEMENTS.mobileBatterDisplay) {
-            displayCurrentPlayer(currentBatterForDisplay, true, DOM_ELEMENTS.mobileBatterDisplay);
-        }
-        if (DOM_ELEMENTS.mobilePitcherDisplay) {
-            displayCurrentPlayer(currentPitcherForDisplay, false, DOM_ELEMENTS.mobilePitcherDisplay);
-        }
-        // 確保電腦版的 player display 是空的或隱藏的 (CSS 應該已處理隱藏)
+        if (DOM_ELEMENTS.mobileBatterDisplay) displayCurrentPlayer(currentBatterForDisplay, true, DOM_ELEMENTS.mobileBatterDisplay);
+        if (DOM_ELEMENTS.mobilePitcherDisplay) displayCurrentPlayer(currentPitcherForDisplay, false, DOM_ELEMENTS.mobilePitcherDisplay);
+        // Clear desktop player displays
         if (DOM_ELEMENTS.awayCurrentPlayerDisplay) DOM_ELEMENTS.awayCurrentPlayerDisplay.innerHTML = '';
         if (DOM_ELEMENTS.homeCurrentPlayerDisplay) DOM_ELEMENTS.homeCurrentPlayerDisplay.innerHTML = '';
-
-    } else {
-        // 電腦版面：使用原來的 team panel displays
+        // Clear desktop lineups
+        if (DOM_ELEMENTS.awayTeamLineupList) DOM_ELEMENTS.awayTeamLineupList.innerHTML = '';
+        if (DOM_ELEMENTS.homeTeamLineupList) DOM_ELEMENTS.homeTeamLineupList.innerHTML = '';
+    } else { // Desktop view
         if (battingTeamKey === 'away') {
             displayCurrentPlayer(currentBatterForDisplay, true, DOM_ELEMENTS.awayCurrentPlayerDisplay);
             displayCurrentPlayer(currentPitcherForDisplay, false, DOM_ELEMENTS.homeCurrentPlayerDisplay);
@@ -399,45 +395,48 @@ export function updateAllDisplays(gameState, gameTeams) {
             if (DOM_ELEMENTS.homeTeamPanel) DOM_ELEMENTS.homeTeamPanel.className = 'team-panel batting-team';
             if (DOM_ELEMENTS.awayTeamPanel) DOM_ELEMENTS.awayTeamPanel.className = 'team-panel fielding-team';
         }
-        // 更新 Lineup Lists (手機版不需要)
         displaySingleTeamLineupList('away', gameTeams, gameState.halfInning === 'top' ? currentBatterForDisplay : null);
         displaySingleTeamLineupList('home', gameTeams, gameState.halfInning === 'bottom' ? currentBatterForDisplay : null);
+         // Clear mobile displays
+        if (DOM_ELEMENTS.mobileBatterDisplay) DOM_ELEMENTS.mobileBatterDisplay.innerHTML = '';
+        if (DOM_ELEMENTS.mobilePitcherDisplay) DOM_ELEMENTS.mobilePitcherDisplay.innerHTML = '';
     }
 }
 
+function updateStandingsDisplay(teamRecords) {
+    if (!teamRecords) return;
+    if (DOM_ELEMENTS.awayTeamRecordSpan && teamRecords.away) {
+        DOM_ELEMENTS.awayTeamRecordSpan.textContent = `(${teamRecords.away.wins}-${teamRecords.away.losses})`;
+    }
+    if (DOM_ELEMENTS.homeTeamRecordSpan && teamRecords.home) {
+        DOM_ELEMENTS.homeTeamRecordSpan.textContent = `(${teamRecords.home.wins}-${teamRecords.home.losses})`;
+    }
+}
 
 const eventKeywords = {
-    'strikes out': 'strikeout',
-    'grounds out': 'out',
-    'flies out': 'out',
-    'pops up': 'out',
-    'lines out': 'out',
-    'out': 'out',
-    'home run': 'homerun',
-    'single': 'single',
-    'double': 'double',
-    'triple': 'triple',
-    'walk': 'walk'
+    'strikes out': 'strikeout', 'grounds out': 'out', 'flies out': 'out',
+    'pops up': 'out', 'lines out': 'out', 'out': 'out', 'home run': 'homerun',
+    'single': 'single', 'double': 'double', 'triple': 'triple', 'walk': 'walk'
 };
-
-
 
 export function updateOutcomeText(message, outcomeType) {
     if (!DOM_ELEMENTS.outcomeText) return;
-    DOM_ELEMENTS.outcomeText.textContent = '';
-    DOM_ELEMENTS.outcomeText.className = 'outcome-neutral';
+    DOM_ELEMENTS.outcomeText.innerHTML = ''; // Clear previous content
+    DOM_ELEMENTS.outcomeText.className = 'outcome-neutral'; // Reset to default
 
-    let regex = Object.keys(eventKeywords).join('|');
-    regex = new RegExp(`\\b(${regex})\\b`, 'gi');
-    const parts = message.split(regex);
+    const messageSpan = document.createElement('span');
+    messageSpan.textContent = message;
 
-    parts.forEach(part => {
-        const span = document.createElement('span');
-        span.textContent = part;
-        const lowerPart = part.toLowerCase();
-        if (eventKeywords.hasOwnProperty(lowerPart)) { // 使用hasOwnProperty
-            span.className = `outcome-${eventKeywords[lowerPart]}`;
-        }
-        DOM_ELEMENTS.outcomeText.appendChild(span);
-    });
+    if (outcomeType && typeof outcomeType === 'string') {
+        // Apply a general class based on the outcomeType
+        const generalClass = `outcome-${outcomeType.toLowerCase().replace(/_/g, '-')}`;
+        messageSpan.classList.add(generalClass);
+
+        // More specific keyword styling can be added here if needed,
+        // but ensure it doesn't conflict with the general outcomeType class.
+        // For example, if outcomeType is "HOMERUN", generalClass will be "outcome-homerun".
+        // If message also contains "home run", it might try to apply it again.
+        // The current approach of a general class is simpler.
+    }
+    DOM_ELEMENTS.outcomeText.appendChild(messageSpan);
 }

@@ -1,603 +1,556 @@
 /* General Body and Layout */
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.5; margin: 0; padding: 10px; background-color: #eef1f5; color: #333; display: flex; flex-direction: column; align-items: center; font-size: 14px; min-height: 100vh; }
-h1 { color: #1a3b5d; text-align: center; margin-top: 5px; margin-bottom: 10px; font-size: 1.7em; }
-h2 { color: #1a3b5d; text-align: center; margin-top: 8px; margin-bottom: 8px; font-size: 1.2em; }
-h3 { font-size: 1.1em; color: #1a3b5d; margin-top: 5px; margin-bottom: 8px; border-bottom: 1px solid #d0d9e2; padding-bottom: 5px; text-align: center; }
-h4 { font-size: 0.9em; color: #345; margin-top: 15px; margin-bottom: 5px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; }
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.5;
+    margin: 0;
+    padding: 10px;
+    background-color: #eef1f5;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 14px; /* Base font size */
+    min-height: 100vh;
+    box-sizing: border-box;
+}
 
-.game-layout { display: flex; justify-content: space-between; width: 100%; max-width: 1500px; margin: 0 auto; gap: 20px; align-items: flex-start; }
+h1 {
+    color: #1a3b5d;
+    text-align: center;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    font-size: 1.7em;
+}
+h2 {
+    color: #1a3b5d;
+    text-align: center;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    font-size: 1.2em;
+}
+h3 { /* Team names in panels */
+    font-size: 1.1em;
+    color: #1a3b5d;
+    margin-top: 5px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #d0d9e2;
+    padding-bottom: 5px;
+    text-align: center;
+}
+h4 { /* "Lineup" title */
+    font-size: 0.9em;
+    color: #345;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
 
-/* Side Panels */
+.game-layout {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1500px; /* Max width of the entire game layout */
+    margin: 0 auto;
+    gap: 15px; /* Reduced gap slightly */
+    align-items: flex-start; /* Align items to the top */
+}
+
+/* Side Panels (Desktop View) */
 .team-panel {
-    width: 350px; padding: 10px 15px; background-color: #fdfdff; border: 1px solid #dde; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.08); height: fit-content; max-height: calc(100vh - 40px); overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; transition: background-color 0.3s ease, border-color 0.3s ease;
+    width: 300px; /* Adjusted width */
+    padding: 10px 15px;
+    background-color: #fdfdff;
+    border: 1px solid #dde;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    height: fit-content; /* Allow panel to size to content */
+    max-height: calc(100vh - 60px); /* Max height with some viewport padding */
+    overflow-y: auto; /* Scroll if content exceeds max-height */
+    flex-shrink: 0; /* Prevent shrinking if main area grows */
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 .team-panel.batting-team {
-    background-color: #f0f8ff;
+    background-color: #f0f8ff; /* Light blue for batting team */
     border-color: #c3dafa;
 }
 .team-panel.fielding-team {
     background-color: #ffffff;
     border-color: #e0e0e0;
 }
-.team-panel.fielding-team .current-player-display {
+.team-panel.fielding-team .current-player-display { /* Specific style for fielding pitcher */
     background-color: #e7f3ff;
     border-color: #b8d4f8;
 }
-
-/* Emphasized Current Player Display */
-.current-player-display { border: 1px solid #c8d6e5; border-radius: 6px; padding: 12px; margin-bottom: 10px; min-height: 110px; background-color: #fff; transition: background-color 0.3s ease, border-color 0.3s ease; }
-.current-player-display h5 { margin: 0 0 8px 0; font-size: 1.1em; color: #0a318d; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c8d6e5; padding-bottom: 5px; }
-.current-player-display .player-main-name { font-size: 1.3em; font-weight: 600; }
-.current-player-display .player-role,
-.current-player-display .player-ovr-small { font-size: 0.9em; font-weight: normal; color: #555; margin-left: 8px; }
-
-.current-player-display .player-stats-detailed { font-size: 0.9em; line-height: 1.6; color: #333; margin-bottom: 8px; font-weight: 500; display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; align-items: center; }
-.current-player-display .stat-label { font-weight: bold; color: #445; text-align: right; font-size: 0.95em; }
-
-.current-player-display .stat-value {
-    font-weight: bold;
-    text-align: center;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background-color: #333;
-    color: #fff;
-    min-width: 25px;
+.team-record { /* For (W-L) display */
+    font-size: 0.8em;
+    font-weight: normal;
+    color: #555;
+    margin-left: 8px;
     display: inline-block;
 }
-.stat-value.stat-low { color: #aaa; }
-.stat-value.stat-medium { color: #a5d6a7; }
-.stat-value.stat-high { color: #fff59d; }
-.stat-value.stat-elite { color: #ef9a9a; }
+
+
+/* Current Player Display (Desktop View) */
+.current-player-display { /* This is for desktop panels */
+    border: 1px solid #c8d6e5;
+    border-radius: 6px;
+    padding: 10px; /* Slightly reduced padding */
+    margin-bottom: 10px;
+    min-height: 120px; /* Ensure some consistent height */
+    background-color: #fff;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+.current-player-display h5 { /* Container for name, role, OVR, career stat */
+    margin: 0 0 8px 0;
+    font-size: 1em; /* Base for relative font sizes of children */
+    color: #0a318d;
+    display: flex;
+    flex-direction: column; /* Stack name, role, ovr, career vertically */
+    align-items: center;   /* Center them horizontally */
+    border-bottom: 1px solid #c8d6e5;
+    padding-bottom: 6px;
+    min-height: 75px; /* Fixed height for this name/role/ovr block */
+    justify-content: space-around; /* Distribute vertical space */
+    box-sizing: border-box;
+}
+.current-player-display .player-main-name {
+    font-size: 1.15em; /* Relative to h5 */
+    font-weight: 600;
+    width: 95%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    display: block; /* To allow width and text-overflow */
+}
+.current-player-display .player-role-info,
+.current-player-display .player-ovr-info,
+.current-player-display .player-career-stat {
+    font-size: 0.85em; /* Relative to h5 */
+    font-weight: normal;
+    color: #444;
+    text-align: center;
+    width: 100%;
+    line-height: 1.3;
+}
+.current-player-display .player-career-stat {
+    color: #0056b3; /* Different color for career stat */
+    font-style: italic;
+}
+
+.current-player-display .player-stats-detailed {
+    font-size: 0.85em;
+    line-height: 1.6;
+    color: #333;
+    margin-bottom: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr; /* Label auto, value takes rest */
+    gap: 4px 8px; /* row-gap column-gap */
+    align-items: center;
+}
+.current-player-display .stat-label {
+    font-weight: bold;
+    color: #445;
+    text-align: right;
+    font-size: 0.9em;
+}
+.current-player-display .stat-value { /* Stat value boxes */
+    font-weight: bold;
+    text-align: center;
+    padding: 2px 5px;
+    border-radius: 4px;
+    background-color: #333; /* Dark background for stat numbers */
+    color: #fff;            /* Default white text for stat numbers */
+    min-width: 22px;
+    display: inline-block;
+    font-size: 0.9em;
+}
+/* Colored text for stat values (on dark background) */
+.stat-value.stat-low { color: #bdc3c7 !important; }    /* Light Gray */
+.stat-value.stat-medium { color: #a5d6a7 !important; } /* Light Green */
+.stat-value.stat-high { color: #fff59d !important; }   /* Light Yellow */
+.stat-value.stat-elite { color: #ef9a9a !important; }  /* Light Red */
 
 .current-player-display .player-history {
-    font-size: 0.85em;
+    font-size: 0.8em;
     color: #5a677a;
     font-style: italic;
     margin-top: 8px;
     border-top: 1px dashed #c8d6e5;
     padding-top: 8px;
-    max-height: none;
-    overflow-y: visible;
     line-height: 1.4;
 }
-.current-player-display .player-history span { margin-right: 5px; padding: 1px 3px; background-color: #f0f4f8; border-radius: 3px; border: 1px solid #dde; }
+.current-player-display .player-history span { /* Individual history items */
+    margin-right: 5px;
+    padding: 1px 3px;
+    background-color: #f0f4f8;
+    border-radius: 3px;
+    border: 1px solid #dde;
+    font-size: 0.9em;
+}
 
-/* Lineup List */
+/* Lineup List (Desktop) */
 .team-panel ul { list-style-type: none; padding: 0; margin: 0; }
-.team-panel li { font-size: 0.85em; padding: 6px 3px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; line-height: 1.4; transition: background-color 0.2s ease;}
+.team-panel li {
+    font-size: 0.85em;
+    padding: 5px 3px; /* Slightly reduced padding */
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    line-height: 1.3;
+    transition: background-color 0.2s ease;
+}
 .team-panel li:last-child { border-bottom: none; }
-.team-panel li.current-batter-in-lineup { background-color: #dceaff; font-weight: bold; }
-.team-panel li .player-info-block { display: flex; flex-direction: column; flex-grow: 1; margin-right: 10px; }
+.team-panel li.current-batter-in-lineup {
+    background-color: #dceaff;
+    font-weight: bold;
+    border-left: 3px solid #0056b3; /* Add a visual cue */
+    padding-left: 6px;
+}
+.team-panel li .player-info-block { display: flex; flex-direction: column; flex-grow: 1; margin-right: 8px; }
 .team-panel .player-name-ovr { display: flex; justify-content: space-between; width: 100%; }
 .team-panel .player-name { flex-grow: 1; margin-right: 5px; }
-.team-panel .player-ovr { margin-left: 8px; color: #0069d9; font-size: 0.95em; font-weight: bold; flex-shrink: 0; }
-.team-panel .batter-score { font-size: 0.9em; color: #334; font-weight: bold; flex-shrink: 0; min-width: 35px; text-align: right; }
-.team-panel .player-stats-detail { display: none; }
+.team-panel .player-ovr { margin-left: 8px; color: #0069d9; font-size: 0.9em; font-weight: bold; flex-shrink: 0; }
+.team-panel .batter-score { font-size: 0.85em; color: #334; font-weight: normal; flex-shrink: 0; min-width: 30px; text-align: right; }
+
 
 /* Main Game Area */
-.main-game-area { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+.main-game-area {
+    flex-grow: 1; /* Takes up remaining space */
+    min-width: 0; /* Important for flex children to shrink properly */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center its children (scoreboard, field, etc.) */
+}
 
 /* Scoreboard */
-.scoreboard-container { width: 100%; max-width: 900px; background-color: #fff; padding: 10px 15px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.06); margin-bottom: 15px; text-align: center; overflow-x: auto; }
+.scoreboard-container {
+    width: 100%;
+    max-width: 800px; /* Adjusted max-width */
+    background-color: #fff;
+    padding: 10px 12px;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+    margin-bottom: 12px;
+    text-align: center;
+    overflow-x: auto; /* Allow horizontal scroll on small screens if table is too wide */
+}
 #scoreboard { width: 100%; border-collapse: collapse; margin-top: 8px; }
-#scoreboard th, #scoreboard td { border: 1px solid #e0e6ec; padding: 5px; text-align: center; font-size: 0.8em; min-width: 25px; white-space: nowrap; }
+#scoreboard th, #scoreboard td {
+    border: 1px solid #e0e6ec;
+    padding: 4px 6px; /* Adjusted padding */
+    text-align: center;
+    font-size: 0.75em; /* Slightly smaller for compactness */
+    min-width: 22px;
+    white-space: nowrap;
+}
 #scoreboard th { background-color: #f0f4f8; color: #1a3b5d; font-weight: bold; }
-#scoreboard .team-name { text-align: left; font-weight: bold; background-color: #f8f9fa; min-width: 80px; }
-#scoreboard .total-runs, #scoreboard .total-hits, #scoreboard .total-errors { font-weight: bold; background-color: #e9ecef; min-width: 30px; }
+#scoreboard .team-name { text-align: left; font-weight: bold; background-color: #f8f9fa; min-width: 70px; }
+#scoreboard .total-runs,
+#scoreboard .total-hits,
+#scoreboard .total-errors { font-weight: bold; background-color: #e9ecef; min-width: 28px; }
 #scoreboard th.current-inning-active,
-#scoreboard td.current-inning-active { background-color: #dceaff !important; font-weight: bold; }
+#scoreboard td.current-inning-active {
+    background-color: #d1e7fd !important; /* Lighter blue */
+    font-weight: bold;
+    box-shadow: inset 0 0 5px rgba(0, 86, 179, 0.2);
+}
 
 /* Field Display */
-.field-display { width: 100%; max-width: 600px; background-color: #fff; padding: 15px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.06); margin-bottom: 15px; text-align: center; position: relative; }
-.field-header { display: flex; justify-content: space-around; align-items: center; margin-bottom: 15px; font-weight: bold; font-size: 1.2em; color: #1a3b5d; padding-bottom: 8px; border-bottom: 1px solid #ddd; }
+.field-display {
+    width: 100%;
+    max-width: 550px; /* Adjusted max-width */
+    background-color: #fff;
+    padding: 12px;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+    margin-bottom: 12px;
+    text-align: center;
+    position: relative; /* For absolute positioning of runners/score flash */
+}
+.field-header {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-bottom: 12px;
+    font-weight: bold;
+    font-size: 1.1em; /* Adjusted size */
+    color: #1a3b5d;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #ddd;
+}
 .field-header div { flex-basis: 45%; text-align: center; }
 
 #inningDisplay { display: flex; align-items: center; justify-content: center; }
-.inning-indicator { display: inline-block; width: 0; height: 0; margin-right: 5px; border-left: 7px solid transparent; border-right: 7px solid transparent; transition: border-color 0.3s ease; }
-.inning-indicator.top { border-bottom: 12px solid #3498db; }
-.inning-indicator.bottom { border-top: 12px solid #e74c3c; }
+.inning-indicator { display: inline-block; width: 0; height: 0; margin-right: 5px; border-left: 6px solid transparent; border-right: 6px solid transparent; transition: border-color 0.3s ease; }
+.inning-indicator.top { border-bottom: 10px solid #3498db; }
+.inning-indicator.bottom { border-top: 10px solid #e74c3c; }
 .inning-number { margin-left: 3px; }
 
 #outsDisplay { display: flex; align-items: center; justify-content: center; }
-.out-light { display: inline-block; width: 20px; height: 20px; border-radius: 50%; background-color: #ccc; margin: 0 4px; border: 1px solid #aaa; box-shadow: inset 0 0 4px rgba(0,0,0,0.2); transition: background-color 0.3s ease, box-shadow 0.3s ease; }
-.out-light.active { background-color: #e74c3c; border-color: #c0392b; box-shadow: inset 0 0 4px rgba(0,0,0,0.1), 0 0 10px rgba(231, 76, 60, 0.8); }
-
-#pitcherNameBelowBases {
-    position: absolute;
-    bottom: -30px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.8em;
-    font-weight: bold;
-    color: #555;
-    white-space: nowrap;
-    display: none;
+.out-light {
+    display: inline-block;
+    width: 18px; height: 18px; /* Adjusted size */
+    border-radius: 50%;
+    background-color: #ccc;
+    margin: 0 3px;
+    border: 1px solid #aaa;
+    box-shadow: inset 0 0 3px rgba(0,0,0,0.2);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+.out-light.active {
+    background-color: #e74c3c; /* Red for active out */
+    border-color: #c0392b;
+    box-shadow: inset 0 0 3px rgba(0,0,0,0.1), 0 0 8px rgba(231, 76, 60, 0.7);
 }
 
-.field-display .diamond-area { position: relative; width: 180px; height: 130px; margin: 25px auto 20px auto; }
+.field-display .diamond-area {
+    position: relative;
+    width: 160px; /* Adjusted size */
+    height: 120px; /* Adjusted size */
+    margin: 20px auto 15px auto;
+}
 .field-display .diamond-area .base {
-    position: absolute; width: 55px; height: 55px; border: 2px solid #888; background-color: #fdfdff; color: #444; font-weight: bold; display: flex; justify-content: center; align-items: center; font-size: 0.9em; box-shadow: 2px 2px 4px rgba(0,0,0,0.15); transform-origin: center center;
-    transform: rotate(-45deg);
+    position: absolute;
+    width: 50px; height: 50px; /* Adjusted size */
+    border: 2px solid #888;
+    background-color: #fdfdff;
+    color: #444;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.85em; /* Adjusted size */
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.15);
+    transform-origin: center center;
+    transform: rotate(-45deg); /* Diamond shape */
 }
 .field-display .diamond-area .base.occupied-base {
-    background-color: #5890b3;
+    background-color: #6cace4; /* Softer blue for occupied base */
+    border-color: #4a8cc2;
+    color: #fff;
 }
-.base .base-label {
-    display: inline-block;
-    transform: rotate(45deg);
-}
+.base .base-label { display: inline-block; transform: rotate(45deg); } /* Counter-rotate label */
 .base-first { top: 50%; right: 0; transform: translate(50%, -50%) rotate(-45deg); }
-.base-second { top: 0; left: 34%; transform: translate(-50%, -50%) rotate(-45deg); }
+.base-second { top: 0; left: 34%; transform: translate(-50%, -50%) rotate(-45deg); } /* Corrected left for centering */
 .base-third { top: 50%; left: 0; transform: translate(-50%, -50%) rotate(-45deg); }
 
-
-/* Stamina Bar Styling - UPDATED */
-/* 外層：放完整漸層 */
-.stamina-bar-container{
-    position:relative;
-    width:100%;
-    height:1em;
-    border-radius:4px;
-    overflow:hidden;
-    background:linear-gradient(
-        to right,
-        red 0%,
-        #ffe100 30%,
-        #cbf817 50%,
-        rgb(29, 255, 29) 100%
-    );
-    border:1px solid #bbb;
-}
-
-/* 內層：灰色遮罩，寬度 = 耗盡百分比 */
-.stamina-empty{          /* ← 原本的 .stamina-bar 可以改這名字 */
-    position:absolute;
-    right:0;             /* 從右邊開始遮 */
-    top:0;
-    height:100%;
-    background:#d8d8d8;
-    transition:width .3s ease;
-}
-
-/* 文字保持原來設定即可 */
-.stamina-text{
-    position:absolute;
-    left:50%;
-    top:50%;
-    transform:translate(-50%,-50%);
-    font-size:.75em;
-    color:#000;
-    pointer-events:none;
-}
-/* End of Stamina Bar Styling */
-
-.field-display .runner-name { position: absolute; font-size: 0.85em; font-weight: bold; color: #0056b3; background-color: rgba(230, 240, 255, 0.9); padding: 2px 5px; border-radius: 4px; white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.1); display: none; z-index: 5; }
-#runnerName1B { top: calc(50% - 10px); right: -85px; }
-#runnerName2B { top: -35px; left: 50%; transform: translateX(-50%); }
-#runnerName3B { top: calc(50% - 10px); left: -85px; }
-
-.score-flash {
+.field-display .runner-name {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 3em;
+    font-size: 0.8em; /* Adjusted size */
     font-weight: bold;
-    color: gold;
-    text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+    color: #004a8d;
+    background-color: rgba(220, 234, 255, 0.95);
+    padding: 1px 4px;
+    border-radius: 3px;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    display: none; /* Hidden by default, shown by JS */
+    z-index: 5;
+}
+/* Runner name positions (may need fine-tuning based on diamond size) */
+#runnerName1B { top: calc(50% - 8px); right: -75px; }
+#runnerName2B { top: -30px; left: 50%; transform: translateX(-50%); }
+#runnerName3B { top: calc(50% - 8px); left: -75px; }
+
+.score-flash { /* For +1 Run! effect */
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.5em; font-weight: bold; color: #ffbf00; /* Gold/Orange */
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
     opacity: 0;
     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-    pointer-events: none;
-    z-index: 100;
+    pointer-events: none; z-index: 100;
 }
-.score-flash.show {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.5);
+.score-flash.show { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
+
+/* At-Bat Outcome Display */
+#at-bat-outcome { width: 100%; max-width: 600px; margin-top: 12px; padding: 10px; text-align: center;}
+#at-bat-outcome h2 { font-size: 1em; margin-bottom: 4px; color: #333; }
+#outcome-text { font-size: 1.05em; min-height: 22px; font-weight: 500; }
+/* Specific outcome styles */
+.outcome-neutral { color: #555; }
+.outcome-strikeout { color: #d32f2f; font-weight: bold; } /* Red */
+.outcome-out { color: #546e7a; font-style: italic; } /* Slate Gray */
+.outcome-homerun { color: #2e7d32; font-size: 1.2em; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); } /* Green */
+.outcome-single, .outcome-double, .outcome-triple { color: #0277bd; font-weight: bold; } /* Blue */
+.outcome-walk, .outcome-walks { color: #512da8; } /* Purple */
+.outcome-game_event { color: #78909c; font-style: italic;} /* For "Change Side" etc. */
+.outcome-game_over { color: #000; font-weight: bold; font-size: 1.1em;}
+
+
+/* Game Controls */
+.game-controls { margin-top: 15px; width: 100%; max-width: 600px; text-align: center; }
+.game-controls button {
+    padding: 12px 25px; /* Adjusted padding */
+    font-size: 1.1em; /* Adjusted font size */
+    margin: 5px;
+    min-width: 140px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
-
-#at-bat-outcome { width: 100%; max-width: 700px; margin-top: 15px; padding: 12px; }
-#outcome-text { font-size: 1.1em; min-height: 25px; }
-
-.game-controls { margin-top: 20px; width: 100%; max-width: 700px; position: relative; text-align: center; }
-.game-controls button { padding: 14px 30px; font-size: 1.2em; margin: 5px; min-width: 150px; }
-#nextPlayButton.simulating { background-color: #ffc107; color: #333; cursor: default; }
-
-.outcome-neutral { color: #777; }
-.outcome-strikeout { color: black; font-weight: bold; }
-.outcome-out { color: black; font-style: italic; }
-.outcome-homerun { color: #007bff; font-size: 1.3em; min-height: 30px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
-.outcome-single, .outcome-double, .outcome-triple { color: deepskyblue; font-weight: bold; }
-.outcome-walk, .outcome-walks { color: royalblue; }
+#startGameButton { background-color: #28a745; color: white; }
+#startGameButton:hover { background-color: #218838; }
+#nextPlayButton { background-color: #007bff; color: white; }
+#nextPlayButton:hover { background-color: #0056b3; }
+#nextPlayButton:disabled { background-color: #6c757d; cursor: not-allowed; }
+#nextPlayButton.simulating { background-color: #ffc107; color: #212529; cursor: default; }
+.game-controls button:active { transform: translateY(1px); }
 
 
-/* 中等螢幕到手機 - 主要斷點 */
+/* --- Mobile Specific Styles --- */
 @media (max-width: 768px) {
-    /* style.css (在 @media (max-width: 768px) 中) */
+    body { padding: 5px; font-size: 13px; }
+    h1 { font-size: 1.4em; margin-bottom: 8px; }
+    .game-layout { flex-direction: column; align-items: center; gap: 10px; }
 
-    /* 隱藏電腦版的 Team Panels */
-    .team-panel {
-        display: none; /* 在手機上完全隱藏 */
+    .team-panel { display: none; } /* Hide desktop panels on mobile */
+
+    .main-game-area { width: 100%; padding: 5px 0; }
+
+    .mobile-player-info-container {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        width: 100%; /* Ensure it takes full width */
+        gap: 8px; /* Gap between batter and pitcher panels */
     }
-
-    /* 主遊戲區域現在是唯一的頂層容器，讓它佔滿寬度 */
-    .main-game-area {
-        width: 100%;
-        padding: 5px; /* 給主區域一點邊距 */
-        box-sizing: border-box;
-        order: initial; /* 移除先前為 team-panel 設定的 order */
-    }
-
-    /* 新增的行動版球員顯示區塊 */
-    .mobile-player-display {
+    .mobile-player-display { /* Batter and Pitcher panels on mobile */
+        width: calc(50% - 4px); /* Corrected width for two panels with gap */
+        padding: 8px;
         border: 1px solid #c8d6e5;
         border-radius: 6px;
-        padding: 8px; /* 調整 padding */
-        margin-bottom: 10px;
         background-color: #fff;
-        /* 與 .current-player-display 相似的樣式，但可以更緊湊 */
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column; /* Ensure content within stacks vertically */
     }
-    .mobile-player-display h5 {
-    margin: 0 0 8px 0;
-    border-bottom: 1px solid #e0e6ec;
-    padding-bottom: 5px; /* Space above the border-bottom */
-    box-sizing: border-box;
-
-    /* --- FIXED HEIGHT for the name area --- */
-    height: 80px;       /* ADJUST THIS VALUE based on testing.
-                           This needs to accommodate:
-                           - 2 lines for player-main-name
-                           - 1 line for player-role-info
-                           - 1 line for player-ovr-info
-                           - Vertical spacing between them (from justify-content)
-                           - The padding-bottom
-                        */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around; /* Distributes the 3 child spans vertically */
-    align-items: center;     /* Center children horizontally */
-    overflow: hidden;        /* Clip any unexpected overflow within the h5 */
+    .mobile-player-display h5 { /* Name, Role, OVR, Career Stat block */
+        margin: 0 0 6px 0;
+        border-bottom: 1px solid #e0e6ec;
+        padding-bottom: 4px;
+        box-sizing: border-box;
+        height: 75px; /* Fixed height - ADJUST AS NEEDED */
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+        overflow: hidden;
+        font-size: 0.9rem; /* Base font size for this block */
     }
-    .mobile-player-display .player-main-name {
-        font-size: 1.1em; /* 略微調整字體大小 */
+    .mobile-player-display h5 .player-main-name {
+        font-size: 1em; /* Relative to h5's font-size */
         font-weight: 600;
+        color: #1a3b5d;
+        text-align: center;
+        width: 98%;
+        line-height: 1.25; /* Adjusted line height for 2 lines */
+        height: calc(1em * 1.25 * 2); /* Fixed height for 2 lines of text */
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
     }
-    .mobile-player-display .player-role,
-    .mobile-player-display .player-ovr-small {
-        font-size: 0.85em; /* 略微調整字體大小 */
+    .mobile-player-display h5 .player-role-info,
+    .mobile-player-display h5 .player-ovr-info,
+    .mobile-player-display h5 .player-career-stat {
+        font-size: 0.8em; /* Relative to h5 */
         color: #555;
-        margin-left: 6px;
+        text-align: center;
+        width: 100%;
+        line-height: 1.2;
     }
+    .mobile-player-display h5 .player-career-stat {
+        font-style: italic;
+        color: #0056b3;
+    }
+
     .mobile-player-display .player-stats-detailed {
-        font-size: 0.8em; /* 略微調整字體大小 */
-        gap: 2px 6px; /* 調整間距 */
+        font-size: 0.75em;
+        gap: 2px 5px; /* Reduced gap */
+        display: grid; /* Already set, ensure it's here */
+        grid-template-columns: auto 1fr;
+        align-items: center;
     }
     .mobile-player-display .stat-label {
         font-weight: bold;
-        color: #445;
+        color: #334455;
         text-align: right;
-        font-size: 0.9em; /* 略微調整字體大小 */
+        font-size: 0.9em; /* Relative to .player-stats-detailed */
     }
     .mobile-player-display .stat-value {
-        padding: 1px 4px; /* 調整 padding */
-        font-size: 0.9em; /* 略微調整字體大小 */
+        padding: 1px 3px;
+        font-size: 0.9em; /* Relative to .player-stats-detailed */
+        min-width: 18px;
+        background-color: #333; /* Ensure dark background */
+        color: #fff; /* Default white text */
     }
-    .mobile-player-display .player-history { /* 手機版可能不需要顯示打擊歷史 */
-        display: none;
-    }
-    .mobile-player-display .stamina-bar-container { /* 確保投手體力條也適當顯示 */
-        height: 0.8em;
-    }
-    .mobile-player-display .stamina-text {
-        font-size: 0.65em;
-    }
+    .mobile-player-display .player-history { display: none; } /* Hide history on mobile */
+    .mobile-player-display .stamina-bar-container { height: 0.8em; margin-top: 1px;}
+    .mobile-player-display .stamina-text { font-size: 0.65em; }
 
-    /* 在電腦版上隱藏行動版專用顯示區塊 */
-    @media (min-width: 769px) {
-        .mobile-player-display {
-            display: none;
-        }
-    }
-
-    /* style.css (在 @media (max-width: 768px) 中) */
-
-    .scoreboard-container {
-        margin-bottom: 10px;
-    }
-
-    #scoreboard {
-        margin-top: 5px;
-    }
-
-    /* 隱藏詳細局數的表頭和儲存格 */
+    .scoreboard-container { margin-bottom: 8px; padding: 8px 5px; }
+    #scoreboard th, #scoreboard td { padding: 3px 4px; font-size: 0.7em; min-width: 20px; }
+    #scoreboard .team-name { min-width: 50px; }
+    #scoreboard .total-runs, #scoreboard .total-hits, #scoreboard .total-errors { min-width: 25px; }
+    /* Hide detailed innings on mobile, show R, H, E */
     #scoreboard th:not(:first-child):not(:nth-last-child(1)):not(:nth-last-child(2)):not(:nth-last-child(3)),
     #scoreboard td:not(:first-child):not(:nth-last-child(1)):not(:nth-last-child(2)):not(:nth-last-child(3)) {
         display: none;
     }
+    .scoreboard-container h2 { display: none; } /* Hide "Scoreboard" title on mobile */
 
-    /* 調整剩餘欄位的樣式，使其更像手繪圖 */
-    #scoreboard th, #scoreboard td {
-        padding: 5px;
-        font-size: 0.9em; /* 稍微放大字體，因為欄位變少了 */
-        min-width: 25px;
-    }
-    #scoreboard .team-name {
-        min-width: 60px; /* 隊名可以寬一點 */
-        font-weight: bold;
-    }
-    #scoreboard .total-runs,
-    #scoreboard .total-hits,
-    #scoreboard .total-errors {
-        min-width: 30px;
-        font-weight: bold;
-    }
+    .field-display { padding: 8px; margin-bottom: 8px; max-width: 100%; }
+    .field-header { font-size: 1em; margin-bottom: 8px; padding-bottom: 4px;}
+    .out-light { width: 15px; height: 15px; margin: 0 2px;}
+    .field-display .diamond-area { width: 130px; height: 100px; margin: 10px auto 8px auto; }
+    .field-display .diamond-area .base { width: 35px; height: 35px; font-size: 0.75em; border-width: 1px;}
+    #runnerName1B { top: calc(50% - 7px); right: -60px; font-size: 0.7em; }
+    #runnerName2B { top: -25px; font-size: 0.7em;}
+    #runnerName3B { top: calc(50% - 7px); left: -60px; font-size: 0.7em;}
 
-    /* 移除 scoreboard-container 的標題 "Scoreboard"，如果需要的話 */
-    .scoreboard-container h2 {
-        display: none; /* 或者可以保留，看您的偏好 */
-    }
-    /* style.css (在 @media (max-width: 768px) 中，根據需要調整或覆蓋先前的規則) */
+    #at-bat-outcome { margin-top: 8px; padding: 6px; }
+    #at-bat-outcome h2 { font-size: 0.9em; margin-bottom: 2px; }
+    #outcome-text { font-size: 0.95em; min-height: 18px; }
 
-    .field-display {
-        padding: 10px;
-        margin-bottom: 10px;
-    }
-
-    .field-header { /* 局數和出局數 */
-        font-size: 1.1em; /* 可以稍微大一點 */
-        padding-bottom: 5px;
-        margin-bottom: 10px;
-    }
-
-    .field-display .diamond-area {
-        width: 150px; /* 根據空間調整 */
-        height: 150px;
-        margin: 15px auto 10px auto; /* 調整邊距 */
-    }
-    .field-display .diamond-area .base {
-        width: 40px;
-        height: 40px;
-    }
-    /* 跑者姓名的位置可能需要重新微調 */
-    #runnerName1B { top: calc(50% - 8px); right: -60px; }
-    #runnerName2B { top: -28px; }
-    #runnerName3B { top: calc(50% - 8px); left: -60px; }
-
-
-    #at-bat-outcome {
-        margin-top: 10px;
-        padding: 8px;
-    }
-    #at-bat-outcome h2 { /* "Last Play:" 標題 */
-        font-size: 1em;
-        margin-bottom: 3px;
-    }
-    #outcome-text {
-        font-size: 0.95em;
-        min-height: 18px;
-    }
-
-    .game-controls {
-        margin-top: 15px;
-    }
     .game-controls button {
-        padding: 12px 25px;
-        font-size: 1.1em; /* 按鈕可以顯眼一點 */
+        padding: 12px 20px;
+        font-size: 1em;
         width: 80%;
-        max-width: 280px;
+        max-width: 250px;
+        min-height: 42px;
     }
-    /* style.css (在 @media (max-width: 768px) 或更小的斷點如 @media (max-width: 480px) 中進行調整) */
-
-/* 目標：盡可能在手機單螢幕顯示核心內容 */
-body {
-    padding-top: 5px; /* 減少頂部 padding */
-    padding-bottom: 5px;
 }
 
-h1 { /* 遊戲主標題 */
-    font-size: 1.2em; /* 再縮小一些 */
-    margin-top: 0;
-    margin-bottom: 5px; /* 減少底部間距 */
+/* Styles for very small screens, further adjustments */
+@media (max-width: 380px) {
+    body { font-size: 12px; }
+    h1 { font-size: 1.2em; }
+    .mobile-player-display h5 { height: 70px; font-size:0.85rem; } /* Adjust height and font for smaller h5 */
+     .mobile-player-display h5 .player-main-name {
+        line-height: 1.2;
+        height: calc(1em * 1.2 * 2); /* Recalculate based on new h5 font-size if changed */
+    }
+    .mobile-player-display .player-stats-detailed { font-size: 0.7em; }
+    .field-display .diamond-area { width: 110px; height: 80px; }
+    .field-display .diamond-area .base { width: 30px; height: 30px; font-size: 0.7em;}
+    #runnerName1B { right: -50px; font-size: 0.65em; }
+    #runnerName2B { top: -22px; font-size: 0.65em;}
+    #runnerName3B { left: -50px; font-size: 0.65em;}
+    .game-controls button { padding: 10px 15px; font-size: 0.9em; min-height: 38px; }
 }
 
-.main-game-area {
-    padding: 5px 0; /* 主遊戲區上下 padding 減少 */
+/* Ensure mobile player info container is hidden on desktop */
+@media (min-width: 769px) {
+    .mobile-player-info-container {
+        display: none;
+    }
 }
-
-.mobile-player-info-container {
-    display: flex;
-    justify-content: space-between; /* 左右貼邊，中間留空 */
-    /* gap: 10px; /* 可選：如果希望面板間有固定間距 */
-    margin-bottom: 12px; /* 與下方元素的間距 */
-}
-
-.mobile-player-display { /* 這是 #mobileBatterDisplay 和 #mobilePitcherDisplay 的 class */
-    width: 148.5%; /* 分配寬度，留出一些空間給可能的 gap 或邊緣 */
-    /* 原有的 padding, border, border-radius, background-color 等樣式保持 */
-    padding: 10px;
-    border: 1px solid #c8d6e5;
-    border-radius: 6px;
-    background-color: #fff;
-    box-sizing: border-box; /* 確保 padding 和 border 不會增加額外寬度 */
-}
-
-/* 投手/打者面板內的 H5 標題樣式 (隊名/球員名) */
-.mobile-player-display h5 {
-    margin: 0 0 8px 0;       /* 底部外邊距 */
-    border-bottom: 1px solid #e0e6ec; /* 底部分隔線 */
-    padding-bottom: 5px;     /* 分隔線與文字間距 */
-    box-sizing: border-box;  /* 確保 padding 和 border 不影響 min-height 計算 */
-
-    min-height: 70px;        /* 設定最小高度，確保此區域等高。請依實際內容調整此數值！ */
-                               /* 這個高度需要足夠容納：
-                                  1. 一行（可能被截斷的）球員名
-                                  2. 一行角色/順位資訊
-                                  3. 一行 OVR 資訊
-                                  以及它們之間的垂直間距。
-                               */
-    display: flex;           /* 使用 flexbox 控制子元素佈局 */
-    flex-direction: column;  /* 子元素垂直排列 */
-    justify-content: space-around; /* 在垂直方向上均勻分佈子元素 (name, role, ovr) */
-    align-items: center;     /* 水平居中子元素 */
-}
-
-/* 球員主名稱樣式 */
-.mobile-player-display h5 .player-main-name {
-    font-size: 1.05em;       /* e.g., if h5 is 14px, this is ~14.7px */
-    font-weight: 600;
-    color: #1a3b5d;
-    text-align: center;
-    width: 95%;              /* Allow slight horizontal padding from edges */
-    max-width: 100%;
-
-    /* --- CSS for 2-line display and truncation --- */
-    line-height: 1.3;        /* Adjust for desired spacing between lines of the name */
-    height: calc(1.05em * 1.3 * 2); /* Fixed height for 2 lines of text.
-                                       (1.05em is its font-size, 1.3 is line-height, 2 is for two lines)
-                                    */
-    overflow: hidden;        /* Clip content if it exceeds this 2-line height */
-    
-    /* Optional: For multi-line ellipsis (works in WebKit-based browsers) */
-    display: -webkit-box;    /* Required for -webkit-line-clamp */
-    -webkit-line-clamp: 2;   /* Limit to 2 lines */
-    -webkit-box-orient: vertical;
-    /* text-overflow: ellipsis; /* Ellipsis for -webkit-line-clamp (often implicit) */
-    /* --- End 2-line display specifics --- */
-}
-
-/* Role/Order Info */
-.mobile-player-display h5 .player-role-info {
-    font-size: 0.85em;      /* e.g., if h5 is 14px, this is ~11.9px */
-    color: #555;
-    text-align: center;
-    line-height: 1.3;       /* Ensure consistent line height */
-    width: 100%;            /* Take full width for centering */
-}
-
-/* OVR Info */
-.mobile-player-display h5 .player-ovr-info {
-    font-size: 0.85em;      /* e.g., if h5 is 14px, this is ~11.9px */
-    color: #555;
-    font-weight: bold;
-    text-align: center;
-    line-height: 1.3;       /* Ensure consistent line height */
-    width: 100%;            /* Take full width for centering */
-}
-
-
-/* 能力值列表 (player-stats-detailed) 的樣式 */
-/* 它本身是一個 grid，每個能力值標籤和數字佔據 grid 的一行中的兩列 */
-/* "their stats being vertical arranged" 指的是這個列表本身是垂直的，這是 grid 預設行為 */
-.mobile-player-display .player-stats-detailed {
-    display: grid;
-    grid-template-columns: auto 1fr; /* 標籤自動寬度，數字佔滿剩餘 */
-    gap: 3px 8px; /* 行間距 垂直間距 */
-    align-items: center; /* 垂直居中對齊標籤和數字 */
-}
-.mobile-player-display .stat-label {
-    font-weight: bold;
-    color: #334455; /* 深藍灰色標籤 */
-    text-align: right; /* 標籤靠右對齊 */
-    font-size: 0.9em; /* 調整標籤字體 */
-}
-.mobile-player-display .stat-value {
-/* 從電腦版繼承或明確設定的基礎樣式 */
-    font-weight: bold;
-    text-align: center;
-    border-radius: 4px; /* 您可以根據手機版面調整圓角大小 */
-    display: inline-block; /* 或 block，取決於您的佈局需求 */
-
-    /* --- 關鍵修正 --- */
-    background-color: #333; /* 明確設定深色背景 */
-    color: #fff;            /* 預設文字顏色 (用於深色背景) */
-    /* --- End 關鍵修正 --- */
-
-    /* 您先前為手機版做的其他調整 (padding, font-size 等) */
-    padding: 1px 4px;       /* 範例：請使用您最終調整的數值 */
-    font-size: 0.85em;      /* 範例：請使用您最終調整的數值 */
-    min-width: 20px;        /* 範例：確保數字能完整顯示 */
-}
-
-/* 確保這些顏色 class 的 color 屬性能夠生效 */
-/* 這些 class 是直接加在 .stat-value 元素上的 */
-.stat-value.stat-low { color: #929292 !important; } /* 或 #bdc3c7 淺灰 */
-.stat-value.stat-medium { color: #77e97b !important; } /* 或 #2ecc71 亮綠 */
-.stat-value.stat-high { color: #ffe342 !important; }   /* 或 #f1c40f 亮黃 */
-.stat-value.stat-elite { color: #df5151 !important; }  /* 或 #e74c3c 亮紅 */
-
-/* 投手體力條 */
-.mobile-player-display .stamina-bar-container {
-    height: 0.9em; /* 體力條高度 */
-    margin-top: 2px; /* 微調與上方 STA 標籤的間距 */
-}
-.mobile-player-display .stamina-text {
-    font-size: 0.7em; /* 體力條文字大小 */
-}
-
-.scoreboard-container {
-    margin-bottom: 8px; /* 減少計分板下方間距 */
-}
-#scoreboard th, #scoreboard td {
-    padding: 3px 4px;  /* 減少計分板儲存格 padding */
-    font-size: 0.85em;
-}
-
-.field-display {
-    padding: 1px;       /* 球場顯示區 padding 減少 */
-    margin-bottom: 3px;
-}
-.field-header { /* 局數和出局數 */
-    font-size: 1em;
-    padding-bottom: 3px;
-    margin-bottom: 5px;
-}
-.out-light {
-    width: 16px; height: 16px; /* 出局燈再小一點 */
-    margin: 0 2px;
-}
-.field-display .diamond-area {
-    width: 120px; /* 壘包區域再小一點 */
-    height: 90px;
-    margin: 12px auto 5px auto;
-}
-.field-display .diamond-area .base {
-    width: 32px; /* 壘包再小一點 */
-    height: 32px;
-    font-size: 0.7em;
-}
-/* 跑者名稱位置需要根據壘包大小重新精確調整 */
-#runnerName1B { top: calc(50% - 7px); right: -50px; font-size: 0.65em; padding: 1px 2px; }
-#runnerName2B { top: -22px; font-size: 0.65em; padding: 1px 2px;}
-#runnerName3B { top: calc(50% - 7px); left: -50px; font-size: 0.65em; padding: 1px 2px;}
-
-
-#at-bat-outcome {
-    margin-top: 5px;
-    padding: 5px;
-}
-#at-bat-outcome h2 {
-    font-size: 0.9em;
-    margin-bottom: 2px;
-}
-#outcome-text {
-    font-size: 0.9em;
-    min-height: 16px; /* 減少最小高度 */
-    line-height: 1.3; /* 調整行高 */
-}
-
-.game-controls {
-    margin-top: 10px; /* 控制按鈕區塊的頂部間距 */
-}
-.game-controls button {
-    padding: 14px 25px;  /* 上下 padding 增加高度，左右 padding 增加寬度感 */
-    font-size: 1.1em;    /* 增大字體 */
-    /* width, max-width, margin, display:block 等屬性根據您之前的設定保留或調整 */
-    display: block;
-    width: 70%;          /* 或您希望的寬度百分比 */
-    max-width: 280px;    /* 最大寬度限制 */
-    margin: 15px auto 0 auto; /* 上方間距，並水平居中 */
-    min-height: 46px;    /* 設定最小高度確保一致性 */
-    line-height: 1.2;    /* 輔助垂直居中文本 */
-    border-radius: 6px;  /* 可選：調整圓角 */
-}
-}
-

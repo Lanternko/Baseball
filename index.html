@@ -11,19 +11,21 @@
 
     <div class="game-layout">
         <div class="team-panel" id="awayTeamPanel">
-            <h3 id="awayTeamNameDisplay">Away Team</h3>
-            <div class="current-player-display" id="awayCurrentPlayerDisplay"></div>
+            <h3 id="awayTeamNameDisplay">Away Team <span class="team-record" id="awayTeamRecord">(0-0)</span></h3>
+            <div class="current-player-display" id="awayCurrentPlayerDisplay">
+                </div>
             <h4>Lineup</h4>
-            <ul id="awayTeamLineupList"></ul>
+            <ul id="awayTeamLineupList">
+                </ul>
         </div>
 
-    <div class="main-game-area">
-        <div class="mobile-player-info-container">  <div class="mobile-player-display" id="mobileBatterDisplay">
+        <div class="main-game-area">
+            <div class="mobile-player-info-container">
+                <div class="mobile-player-display" id="mobileBatterDisplay">
+                    </div>
+                <div class="mobile-player-display" id="mobilePitcherDisplay">
+                    </div>
             </div>
-            <div class="mobile-player-display" id="mobilePitcherDisplay">
-            </div>
-        </div>                                   
-
 
             <div class="scoreboard-container">
                 <h2>Scoreboard</h2>
@@ -63,14 +65,10 @@
                     </div>
                 </div>
                 <div id="basesDisplay">
-                    
                     <div class="diamond-area">
                         <div class="base base-third" id="thirdBase"><span class="base-label">3B</span></div>
                         <div class="base base-second" id="secondBase"><span class="base-label">2B</span></div>
                         <div class="base base-first" id="firstBase"><span class="base-label">1B</span></div>
-                        <!-- <div class="pitchers-mound" id="pitchersMound">
-                            <span id="pitcherOnMoundName">P</span>
-                        </div> -->
                         <div class="runner-name" id="runnerName3B"></div>
                         <div class="runner-name" id="runnerName2B"></div>
                         <div class="runner-name" id="runnerName1B"></div>
@@ -91,10 +89,12 @@
         </div>
 
         <div class="team-panel" id="homeTeamPanel">
-            <h3 id="homeTeamNameDisplay">Home Team</h3>
-             <div class="current-player-display" id="homeCurrentPlayerDisplay"></div>
+            <h3 id="homeTeamNameDisplay">Home Team <span class="team-record" id="homeTeamRecord">(0-0)</span></h3>
+            <div class="current-player-display" id="homeCurrentPlayerDisplay">
+                </div>
             <h4>Lineup</h4>
-            <ul id="homeTeamLineupList"></ul>
+            <ul id="homeTeamLineupList">
+                </ul>
         </div>
     </div>
 

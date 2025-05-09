@@ -1,55 +1,68 @@
 // js/main.js
-import { gameTeams, initializePlayerStats } from './playerUtils.js';
+import { loadData, TEAM_RECORDS_KEY, clearSavedData } from './storageUtils.js';
+import { initialGameTeams, prepareTeamsData } from './playerUtils.js';
 import { DOM_ELEMENTS, initializeUI, updateAllDisplays, updateOutcomeText } from './ui.js';
 import { initializeGame, playNextAtBat, getGameState } from './gameLogic.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    initializePlayerStats(gameTeams);
-    initializeUI(gameTeams);
+    // Load team W-L records for initial display
+    const loadedTeamRecords = loadData(TEAM_RECORDS_KEY, {
+        away: { name: initialGameTeams.away.name, wins: 0, losses: 0 },
+        home: { name: initialGameTeams.home.name, wins: 0, losses: 0 }
+    });
 
+    // Prepare `currentTeamsData` by loading career stats into a fresh copy of `initialGameTeams`
+    // This object will hold the live data for the current game session.
+    let currentTeamsData = prepareTeamsData(initialGameTeams);
+
+    // Initialize UI with the prepared team data and loaded W-L records
+    initializeUI(currentTeamsData, loadedTeamRecords);
+
+    // --- Simulation Control Variables ---
     let simInterval = null;
     let isSimulating = false;
     let pressTimer = null;
-    const LONG_PRESS_DURATION = 400; // ms to hold for continuous sim
-    const SIM_INTERVAL_DELAY = 150; // ms between simulated plays
+    const LONG_PRESS_DURATION = 400; // ms
+    const SIM_INTERVAL_DELAY = 150;  // ms
 
     function runSingleSimulationStep() {
         const currentGameState = getGameState();
         if (currentGameState.gameOver || isSimulating) {
             stopContinuousSimulation();
-            return false; // Indicate simulation should stop
+            return false;
         }
         isSimulating = true;
 
         try {
-            playNextAtBat(gameTeams);
-            const newState = getGameState(); // Get state *after* play
-            updateAllDisplays(newState, gameTeams);
+            playNextAtBat(currentTeamsData); // Pass the live game data object
+            const newState = getGameState(); // Get the updated game state
+            // For standings, reload or use the initially loaded records.
+            // If a game just ended, gameLogic's endGame would have updated and saved them.
+            const latestRecords = loadData(TEAM_RECORDS_KEY, loadedTeamRecords); // Fallback to initially loaded
+            updateAllDisplays(newState, currentTeamsData, latestRecords); // Pass ALL necessary data
 
             if (newState.gameOver) {
                 stopContinuousSimulation();
                 DOM_ELEMENTS.nextPlayButton.disabled = true;
                 DOM_ELEMENTS.startGameButton.style.display = 'inline-block';
-                return false; // Indicate simulation should stop
+                return false;
             }
         } catch (error) {
             console.error("Error during simulation step:", error);
             stopContinuousSimulation();
-            return false; // Indicate simulation should stop
+            return false;
         } finally {
-             isSimulating = false;
+            isSimulating = false;
         }
-        return true; // Indicate simulation can continue
+        return true;
     }
 
     function startContinuousSimulation() {
         if (simInterval) return;
         console.log("Starting continuous simulation...");
         DOM_ELEMENTS.nextPlayButton.classList.add('simulating');
-        // Run steps using interval
         simInterval = setInterval(() => {
-            const canContinue = runSingleSimulationStep();
-            if (!canContinue) {
+            if (!runSingleSimulationStep()) {
                 stopContinuousSimulation();
             }
         }, SIM_INTERVAL_DELAY);
@@ -68,60 +81,73 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Event Listeners ---
     DOM_ELEMENTS.startGameButton.addEventListener('click', () => {
         stopContinuousSimulation();
-        initializeGame(gameTeams);
+
+        // Prepare fresh team data for a new game (loads career stats, resets game stats, calculates OVRs)
+        currentTeamsData = prepareTeamsData(initialGameTeams);
+
+        initializeGame(currentTeamsData); // Initialize game state with this fresh data
         const currentGameState = getGameState();
-        updateAllDisplays(currentGameState, gameTeams);
+        const latestRecords = loadData(TEAM_RECORDS_KEY, loadedTeamRecords);
+        updateAllDisplays(currentGameState, currentTeamsData, latestRecords);
+
         DOM_ELEMENTS.startGameButton.style.display = 'none';
         DOM_ELEMENTS.nextPlayButton.style.display = 'inline-block';
         DOM_ELEMENTS.nextPlayButton.disabled = false;
         updateOutcomeText("Game started! Away team batting.", "GAME_EVENT");
     });
 
-    // Single Click
     DOM_ELEMENTS.nextPlayButton.addEventListener('click', () => {
-        // Only run single step if not currently holding down for long press
         if (!pressTimer && !simInterval) {
             runSingleSimulationStep();
         }
     });
 
-    // Long Press Start
     DOM_ELEMENTS.nextPlayButton.addEventListener('mousedown', (e) => {
-        if (getGameState().gameOver || simInterval) return; // Don't start if game over or already simulating
-        // Prevent starting if it wasn't a left click
+        if (getGameState().gameOver || simInterval) return;
         if (e.button !== 0) return;
 
-        // Clear any previous timer
         clearTimeout(pressTimer);
-        // Start a new timer
         pressTimer = setTimeout(() => {
-            pressTimer = null; // Timer has fired, clear it
+            pressTimer = null;
             if (!getGameState().gameOver) {
                  startContinuousSimulation();
             }
         }, LONG_PRESS_DURATION);
     });
 
-    // Long Press End / Mouse Up
     DOM_ELEMENTS.nextPlayButton.addEventListener('mouseup', () => {
-        clearTimeout(pressTimer); // Cancel timer if released before it fires
+        clearTimeout(pressTimer);
         pressTimer = null;
-        stopContinuousSimulation(); // Always stop sim on mouse up
+        // If you want click-and-hold to sim then stop on release:
+        // stopContinuousSimulation();
+        // Otherwise, continuous sim stops on game over or mouse leave.
     });
 
-    // Mouse Leave safety
     DOM_ELEMENTS.nextPlayButton.addEventListener('mouseleave', () => {
         clearTimeout(pressTimer);
         pressTimer = null;
-        // Stop simulating if mouse leaves while button is held
         if (simInterval) {
             stopContinuousSimulation();
         }
     });
 
-     // Prevent context menu on long press
-    DOM_ELEMENTS.nextPlayButton.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-    });
+    DOM_ELEMENTS.nextPlayButton.addEventListener('contextmenu', (e) => e.preventDefault());
 
+    // Optional: Reset Button
+    const resetButton = document.createElement('button');
+    resetButton.id = 'resetDataButton';
+    resetButton.textContent = 'Reset All Saved Stats';
+    resetButton.style.position = 'fixed';
+    resetButton.style.top = '10px';
+    resetButton.style.right = '10px';
+    resetButton.style.zIndex = '1000';
+    resetButton.style.padding = '8px 12px';
+    resetButton.style.backgroundColor = '#f44336';
+    resetButton.style.color = 'white';
+    resetButton.style.border = 'none';
+    resetButton.style.borderRadius = '4px';
+    resetButton.style.cursor = 'pointer';
+    resetButton.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+    document.body.appendChild(resetButton);
+    resetButton.addEventListener('click', clearSavedData);
 });

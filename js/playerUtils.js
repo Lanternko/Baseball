@@ -1,82 +1,72 @@
+// js/playerUtils.js
 import { CONFIG } from './config.js';
+import { loadData, PLAYER_STATS_KEY } from './storageUtils.js'; // Ensure this import is correct
 
-// ─────────────────────────────────────────────────────────────────────────────
-// OVR 計算函式
-// ─────────────────────────────────────────────────────────────────────────────
+// OVR Calculation Functions
 function calculateBatterOVR(batter) {
     const w = CONFIG.ovrWeights.batter;
     const power   = batter.power   ?? 5;
     const hitRate = batter.hitRate ?? 5;
     const contact = batter.contact ?? 5;
     const speed   = batter.speed   ?? 5;
-  
-    const score =
-      power   * w.power   +
-      hitRate * w.hitRate +
-      contact * w.contact +
-      speed   * w.speed;
-  
+    const score = power * w.power + hitRate * w.hitRate + contact * w.contact + speed * w.speed;
     const ovr = Math.round(score * w.scale + w.base);
     return Math.min(99, Math.max(40, ovr));
-  }
-  
-  // ── Pitcher OVR：改用「差值 × 權重」以拉大分佈 ──
-  function calculatePitcherOVR(p) {
-    // 個別能力（1‑10），以 5 為平均
+}
+
+function calculatePitcherOVR(p) {
     const power     = p.power     ?? 5;
     const velocity  = p.velocity  ?? 5;
     const control   = p.control   ?? 5;
     const technique = p.technique ?? 5;
     const maxSta    = p.maxStamina ?? 70;
-  
-    // stamina 轉換成 0‑7.5 區間的加分
-    const staBonus = Math.max(0, (maxSta - 50) / 10) * 1.5; // 50→0 分，100→7.5 分
-  
-    // 每項差 1 點 → OVR 漲 (權重) 點
-    const diffScore =
-        (power     - 5) * 4 +
-        (velocity  - 5) * 4 +
-        (control   - 5) * 3 +
-        (technique - 5) * 2 +
-        staBonus;
-  
-    const base = 50; // 全屬性 = 5 時即 50 OVR
+    const staBonus = Math.max(0, (maxSta - 50) / 10) * 1.5; // Example: 50 stamina = 0 bonus, 100 stamina = 7.5 bonus
+    const diffScore = (power - 5) * 4 + (velocity - 5) * 4 + (control - 5) * 3 + (technique - 5) * 2 + staBonus;
+    const base = 50; // Assuming 50 is the OVR for an all-5 stats pitcher before stamina bonus
     const ovr  = Math.round(base + diffScore);
     return Math.min(99, Math.max(40, ovr));
-  }
-  
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Player 物件工廠
-  // ─────────────────────────────────────────────────────────────────────────────
-  export function createPlayer(name, type, stats = {}) {
-    const p = { name, type };
-  
-    if (type === 'batter') {
-      p.power   = stats.power   ?? 5;
-      p.hitRate = stats.hitRate ?? 5;
-      p.contact = stats.contact ?? 5;
-      p.speed   = stats.speed   ?? 5;
-      p.atBats = p.hits = p.runsBattedIn = 0;
-      p.atBatHistory = [];
-      p.performanceString = '0-0';
-    } else if (type === 'pitcher') {
-      p.role       = stats.role || 'Reliever';
-      p.power      = stats.power     ?? 5;
-      p.velocity   = stats.velocity  ?? 5;
-      p.control    = stats.control   ?? 5;
-      p.technique  = stats.technique ?? 5;
-      p.maxStamina = stats.maxStamina ?? (p.role === 'Starter' ? 100 : p.role === 'Reliever' ? 60 : 40);
-      p.currentStamina = p.maxStamina;
-      p.teamKeyOriginal = stats.teamKeyOriginal ?? null;
-    }
-  
-    return p;
-  }
+}
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Teams 初始資料
-// ─────────────────────────────────────────────────────────────────────────────
-export const gameTeams = {
+// Player Object Factory
+export function createPlayer(name, type, stats = {}) {
+    const p = { name, type };
+    if (type === 'batter') {
+        p.power   = stats.power   ?? 5;
+        p.hitRate = stats.hitRate ?? 5;
+        p.contact = stats.contact ?? 5;
+        p.speed   = stats.speed   ?? 5;
+        // Game-specific stats (reset each game)
+        p.atBats = 0;
+        p.hits = 0;
+        p.runsBattedIn = 0;
+        p.atBatHistory = [];
+        p.performanceString = '0-0';
+        // Career stats (loaded or default to 0)
+        p.careerAtBats = stats.careerAtBats || 0;
+        p.careerHits = stats.careerHits || 0;
+    } else if (type === 'pitcher') {
+        p.role       = stats.role || 'Reliever'; // Default role
+        p.power      = stats.power     ?? 5;    // Pitcher's "stuff" or general power
+        p.velocity   = stats.velocity  ?? 5;
+        p.control    = stats.control   ?? 5;
+        p.technique  = stats.technique ?? 5;    // Ability to hit spots, command, etc.
+        p.maxStamina = stats.maxStamina ?? (p.role === 'Starter' ? 100 : p.role === 'Reliever' ? 60 : 40);
+        p.currentStamina = p.maxStamina;
+        // Career stats
+        p.careerOutsRecorded = stats.careerOutsRecorded || 0;
+        p.careerRunsAllowed = stats.careerRunsAllowed || 0; // Or earned runs if you track errors
+        p.careerWins = stats.careerWins || 0; // Pitcher wins are complex, not fully implemented here
+        p.careerLosses = stats.careerLosses || 0; // Pitcher losses are complex
+        p.teamKeyOriginal = stats.teamKeyOriginal ?? null;
+    }
+    // Calculate OVR (should be done after all base stats are set)
+    if (type === 'batter') p.ovr = calculateBatterOVR(p);
+    else if (type === 'pitcher') p.ovr = calculatePitcherOVR(p);
+    return p;
+}
+
+// Initial Team Data structure
+export const initialGameTeams = {
   away: {
     name: 'Yankees',
     batters: [
@@ -91,21 +81,11 @@ export const gameTeams = {
       createPlayer('Jasson Domínguez','batter', { power: 7,  hitRate: 6, contact: 5, speed: 8 })
     ],
     pitchers: {
-      starter: createPlayer('Max Fried', 'pitcher', {
-        role: 'Starter', power: 9, velocity: 8, control: 8, technique: 7, maxStamina: 95
-      }),
-      reliever: createPlayer('Carlos Rodón', 'pitcher', {
-        role: 'Reliever', power: 8, velocity: 7, control: 7, technique: 6, maxStamina: 75
-      }),
-      closer: createPlayer('Devin Williams', 'pitcher', {
-        role: 'Closer', power: 7, velocity: 8, control: 6, technique: 7, maxStamina: 45
-      })
+      starter: createPlayer('Max Fried', 'pitcher', { role: 'Starter', power: 9, velocity: 8, control: 8, technique: 7, maxStamina: 95 }),
+      reliever: createPlayer('Carlos Rodón', 'pitcher', { role: 'Reliever', power: 8, velocity: 7, control: 7, technique: 6, maxStamina: 75 }),
+      closer: createPlayer('Devin Williams', 'pitcher', { role: 'Closer', power: 7, velocity: 8, control: 6, technique: 7, maxStamina: 45 })
     },
-    scorePerInning: Array(CONFIG.innings).fill(0),
-    totalRuns: 0,
-    totalHits: 0,
-    totalErrors: 0,
-    currentBatterIndex: 0
+    scorePerInning: Array(CONFIG.innings).fill(0), totalRuns: 0, totalHits: 0, totalErrors: 0, currentBatterIndex: 0
   },
   home: {
     name: 'Dodgers',
@@ -121,46 +101,68 @@ export const gameTeams = {
       createPlayer('Miguel Vargas', 'batter', { power: 5, hitRate: 6, contact: 7, speed: 6 })
     ],
     pitchers: {
-      starter: createPlayer('Yoshinobu Yamamoto', 'pitcher', {
-        role: 'Starter', power: 8, velocity: 9, control: 9, technique: 8, maxStamina: 100
-      }),
-      reliever: createPlayer('Blake Treinen', 'pitcher', {
-        role: 'Reliever', power: 7, velocity: 8, control: 7, technique: 6, maxStamina: 70
-      }),
-      closer: createPlayer('Evan Phillips', 'pitcher', {
-        role: 'Closer', power: 9, velocity: 9, control: 8, technique: 7, maxStamina: 50
-      })
+      starter: createPlayer('Yoshinobu Yamamoto', 'pitcher', { role: 'Starter', power: 8, velocity: 9, control: 9, technique: 8, maxStamina: 100 }),
+      reliever: createPlayer('Blake Treinen', 'pitcher', { role: 'Reliever', power: 7, velocity: 8, control: 7, technique: 6, maxStamina: 70 }),
+      closer: createPlayer('Evan Phillips', 'pitcher', { role: 'Closer', power: 9, velocity: 9, control: 8, technique: 7, maxStamina: 50 })
     },
-    scorePerInning: Array(CONFIG.innings).fill(0),
-    totalRuns: 0,
-    totalHits: 0,
-    totalErrors: 0,
-    currentBatterIndex: 0
+    scorePerInning: Array(CONFIG.innings).fill(0), totalRuns: 0, totalHits: 0, totalErrors: 0, currentBatterIndex: 0
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// OVR & 初始狀態計算
-// ─────────────────────────────────────────────────────────────────────────────
-export function initializePlayerStats(teams) {
-    for (const key in teams) {
-      const t = teams[key];
-  
-      t.batters?.forEach(b => {
-        b.ovr = calculateBatterOVR(b);
-        b.atBats = b.hits = b.runsBattedIn = 0;
-        b.atBatHistory = [];
-        b.performanceString = '0-0';
-      });
-  
-      if (t.pitchers) {
-        Object.values(t.pitchers).forEach(p => {
-          if (p) {
-            p.teamKeyOriginal = key;
-            p.ovr = calculatePitcherOVR(p);
-          }
-        });
-      }
+// Prepares team data: creates players, loads career stats, calculates OVRs, and resets game-specific stats.
+export function prepareTeamsData(baseTeamsStructure) {
+    // Create a deep copy from the base structure to ensure fresh player objects for each game preparation
+    let workingTeamsData = JSON.parse(JSON.stringify(baseTeamsStructure));
+    const savedPlayerStats = loadData(PLAYER_STATS_KEY);
+
+    // Re-create player objects to ensure methods and correct prototype chain, then merge saved stats
+    for (const teamKey in workingTeamsData) {
+        const teamData = workingTeamsData[teamKey];
+        // Re-create batters and merge saved stats
+        if (teamData.batters && Array.isArray(teamData.batters)) {
+            teamData.batters = teamData.batters.map(baseBatterStats => {
+                let careerData = {};
+                if (savedPlayerStats && savedPlayerStats[teamKey] && savedPlayerStats[teamKey].batters) {
+                    const savedBatter = savedPlayerStats[teamKey].batters.find(sb => sb.name === baseBatterStats.name);
+                    if (savedBatter) {
+                        careerData = {
+                            careerAtBats: savedBatter.careerAtBats || 0,
+                            careerHits: savedBatter.careerHits || 0,
+                            // Add other career stats here
+                        };
+                    }
+                }
+                return createPlayer(baseBatterStats.name, 'batter', { ...baseBatterStats, ...careerData });
+            });
+        }
+
+        // Re-create pitchers and merge saved stats
+        if (teamData.pitchers && typeof teamData.pitchers === 'object') {
+            for (const role in teamData.pitchers) {
+                const basePitcherStats = teamData.pitchers[role];
+                if (basePitcherStats) {
+                    let careerData = {};
+                    if (savedPlayerStats && savedPlayerStats[teamKey] && savedPlayerStats[teamKey].pitchers && savedPlayerStats[teamKey].pitchers[role]) {
+                         const savedPitcher = savedPlayerStats[teamKey].pitchers[role];
+                         // Ensure names match if the structure is based on roles being unique identifiers for saved data
+                         if (savedPitcher && basePitcherStats.name === savedPitcher.name) {
+                            careerData = {
+                                careerOutsRecorded: savedPitcher.careerOutsRecorded || 0,
+                                careerRunsAllowed: savedPitcher.careerRunsAllowed || 0,
+                                // Add other career stats
+                            };
+                         }
+                    }
+                    teamData.pitchers[role] = createPlayer(basePitcherStats.name, 'pitcher', { ...basePitcherStats, ...careerData, role: basePitcherStats.role || role });
+                }
+            }
+        }
+        // Reset game-specific team stats
+        teamData.scorePerInning = Array(CONFIG.innings).fill(0);
+        teamData.totalRuns = 0;
+        teamData.totalHits = 0;
+        teamData.totalErrors = 0;
+        teamData.currentBatterIndex = 0;
     }
-  }
-  
+    return workingTeamsData;
+}
