@@ -5,6 +5,9 @@ export const DOM_ELEMENTS = {
     // Game Controls
     startGameButton: document.getElementById('startGameButton'),
     nextPlayButton: document.getElementById('nextPlayButton'),
+    simInningButton: document.getElementById('simInningButton'),
+    simGameButton: document.getElementById('simGameButton'),
+    sim10GamesButton: document.getElementById('sim10GamesButton'),
 
     // Field Header
     inningDisplay: document.getElementById('inningDisplay'),
@@ -49,6 +52,8 @@ export const DOM_ELEMENTS = {
     homeCurrentPlayerDisplay: document.getElementById('homeCurrentPlayerDisplay'),
     awayTeamLineupList: document.getElementById('awayTeamLineupList'),
     homeTeamLineupList: document.getElementById('homeTeamLineupList'),
+    awayTeamBullpenList: document.getElementById('awayTeamBullpenList'),
+    homeTeamBullpenList: document.getElementById('homeTeamBullpenList'),
 
     // Mobile Displays
     mobileBatterDisplay: document.getElementById('mobileBatterDisplay'),
@@ -102,6 +107,9 @@ export function initializeUI(gameTeams, teamRecords) {
     if(DOM_ELEMENTS.homeCurrentPlayerDisplay) DOM_ELEMENTS.homeCurrentPlayerDisplay.innerHTML = waitingMessage;
     if(DOM_ELEMENTS.mobileBatterDisplay) DOM_ELEMENTS.mobileBatterDisplay.innerHTML = waitingMessage;
     if(DOM_ELEMENTS.mobilePitcherDisplay) DOM_ELEMENTS.mobilePitcherDisplay.innerHTML = waitingMessage;
+    
+    if(DOM_ELEMENTS.awayTeamBullpenList) DOM_ELEMENTS.awayTeamBullpenList.innerHTML = '';
+    if(DOM_ELEMENTS.homeTeamBullpenList) DOM_ELEMENTS.homeTeamBullpenList.innerHTML = '';
 
     if(DOM_ELEMENTS.awayTeamPanel) DOM_ELEMENTS.awayTeamPanel.className = 'team-panel';
     if(DOM_ELEMENTS.homeTeamPanel) DOM_ELEMENTS.homeTeamPanel.className = 'team-panel';
@@ -109,10 +117,6 @@ export function initializeUI(gameTeams, teamRecords) {
     updateStandingsDisplay(teamRecords);
 }
 
-// --- Helper Functions ---
-
-
-// NEW: Helper function to get OVR color class
 function getOvrColorClass(ovr) {
     if (ovr === undefined || ovr === null) return '';
     const thresholds = CONFIG.ovrColorSettings.thresholds;
@@ -123,11 +127,8 @@ function getOvrColorClass(ovr) {
     if (ovr <= thresholds.red) return classes.red;
     if (ovr <= thresholds.green) return classes.green;
     if (ovr <= thresholds.golden) return classes.golden;
-    return ''; // Default if no threshold met (should not happen with 99 max)
+    return '';
 }
-
-
-// --- Core UI Update Functions ---
 
 function abbreviatePlayerName(fullName, maxLength = 16, panelWidthChars = 15) {
     if (fullName.length <= panelWidthChars) { return fullName; }
@@ -135,9 +136,9 @@ function abbreviatePlayerName(fullName, maxLength = 16, panelWidthChars = 15) {
     if (parts.length > 1) {
         let abbreviated = `${parts[0][0]}. ${parts.slice(-1)[0]}`;
         if (abbreviated.length <= maxLength) { return abbreviated; }
-        const lastNamePartLength = maxLength - 3; // For "F. "
+        const lastNamePartLength = maxLength - 3;
         if (parts.slice(-1)[0].length > lastNamePartLength) {
-             abbreviated = `${parts[0][0]}. ${parts.slice(-1)[0].substring(0, Math.max(1,lastNamePartLength-3))}...`; // Ensure substring doesn't go negative
+             abbreviated = `${parts[0][0]}. ${parts.slice(-1)[0].substring(0, Math.max(1,lastNamePartLength-3))}...`;
              return abbreviated;
         }
         return fullName.substring(0, maxLength - 3) + "...";
@@ -258,7 +259,6 @@ function displayCurrentPlayer(player, isBatter, targetElement) {
     if (!targetElement) return;
     targetElement.innerHTML = '';
 
-    // Reset OVR color classes
     Object.values(CONFIG.ovrColorSettings.classes).forEach(className => {
         targetElement.classList.remove(className);
     });
@@ -268,7 +268,6 @@ function displayCurrentPlayer(player, isBatter, targetElement) {
         return;
     }
 
-    // Apply OVR color class to the panel
     const ovrClass = getOvrColorClass(player.ovr);
     if (ovrClass) {
         targetElement.classList.add(ovrClass);
@@ -283,7 +282,8 @@ function displayCurrentPlayer(player, isBatter, targetElement) {
 
     if (isBatter) {
         const avg = (player.careerAtBats || 0) > 0 ? ((player.careerHits || 0) / player.careerAtBats) : 0;
-        careerStatString = `AVG: ${avg.toFixed(3).replace(/^0/, '')}`;
+        const hr = player.careerHomeRuns || 0;
+        careerStatString = `AVG: ${avg.toFixed(3).replace(/^0/, '')} / HR: ${hr}`;
         statsGridHTML = `
             <span class="stat-label">POW</span><span class="stat-value ${getStatColorClass(player.power)}">${player.power}</span>
             <span class="stat-label">HIT</span><span class="stat-value ${getStatColorClass(player.hitRate)}">${player.hitRate}</span>
@@ -298,18 +298,19 @@ function displayCurrentPlayer(player, isBatter, targetElement) {
     } else { // Pitcher
         const outs = player.careerOutsRecorded || 0;
         const runs = player.careerRunsAllowed || 0;
-        const ra9 = outs > 0 ? (runs / outs * 27) : 0;
-        careerStatString = `ERA: ${outs > 0 ? ra9.toFixed(2) : 'N/A'}`;
+        const ra9 = outs > 0 ? (runs / outs * 27) : 0; // RA9 (equivalent to ERA if all runs are earned)
+        const so = player.careerStrikeouts || 0;
+        careerStatString = `ERA: ${outs > 0 ? ra9.toFixed(2) : 'N/A'} / SO: ${so}`;
         const staminaFilledPercent = player.maxStamina > 0 ? (player.currentStamina / player.maxStamina * 100) : 0;
-        const staminaEmptyPercent = 100 - staminaFilledPercent;
+        
         statsGridHTML = `
             <span class="stat-label">POW</span><span class="stat-value ${getStatColorClass(player.power)}">${player.power}</span>
             <span class="stat-label">CON</span><span class="stat-value ${getStatColorClass(player.control)}">${player.control}</span>
             <span class="stat-label">VEL</span><span class="stat-value ${getStatColorClass(player.velocity)}">${player.velocity}</span>
-            <span class="stat-label">TEC</span><span class="stat-value ${getStatColorClass(player.technique)}">${player.technique}</span>
+            <span class="stat-label">TECH</span><span class="stat-value ${getStatColorClass(player.technique)}">${player.technique}</span>
             <span class="stat-label">STM</span>
             <div class="stamina-bar-container">
-                <div class="stamina-empty" style="width:${staminaEmptyPercent.toFixed(1)}%"></div>
+                <div class="stamina-empty" style="width:${100 - staminaFilledPercent.toFixed(1)}%"></div>
                 <span class="stamina-text">${player.currentStamina}/${player.maxStamina}</span>
             </div>
         `;
@@ -333,7 +334,7 @@ function displaySingleTeamLineupList(teamKey, gameTeamsData, currentActiveBatter
     if (!team || !team.batters || !listElement) return;
 
     listElement.innerHTML = '';
-    team.batters.forEach((batter) => {
+    team.batters.forEach((batter) => { // Removed index, as batting order number is removed
         const listItem = document.createElement('li');
         if (batter === currentActiveBatter) {
             listItem.classList.add('current-batter-in-lineup');
@@ -342,17 +343,72 @@ function displaySingleTeamLineupList(teamKey, gameTeamsData, currentActiveBatter
         const careerAB = batter.careerAtBats || 0;
         const careerH = batter.careerHits || 0;
         const avg = careerAB > 0 ? (careerH / careerAB) : 0;
-        const avgString = avg.toFixed(3);
-        const displayAvg = avg < 1 ? avgString.substring(1) : avgString;
+        const avgString = avg.toFixed(3).replace(/^0/, '');
+        const hr = batter.careerHomeRuns || 0;
 
-        const ovrClass = getOvrColorClass(batter.ovr); // Get OVR class for the batter
+        const ovrClass = getOvrColorClass(batter.ovr);
 
         listItem.innerHTML = `
-            <span class="player-ovr-lineup ${ovrClass}">${batter.ovr}</span> <span class="player-name-lineup ${ovrClass}">${batter.name}</span> <span class="batter-career-avg">${displayAvg}</span>
+            <span class="player-ovr-lineup ${ovrClass}">${batter.ovr}</span>
+            <span class="player-name-lineup ${ovrClass}">${batter.name}</span> 
+            <span class="batter-career-stats">${avgString} / ${hr}HR</span>
         `;
         listElement.appendChild(listItem);
     });
 }
+
+export function displayTeamBullpen(teamKey, gameTeamsData, activePitcher) {
+    const team = gameTeamsData[teamKey];
+    const listElement = teamKey === 'away' ? DOM_ELEMENTS.awayTeamBullpenList : DOM_ELEMENTS.homeTeamBullpenList;
+
+    if (!team || !team.pitchers || !listElement) {
+        if (listElement) listElement.innerHTML = '<li>Bullpen data not available.</li>';
+        return;
+    }
+
+    listElement.innerHTML = ''; 
+
+    const bullpenPitchers = [];
+    // Add all pitcher roles to the bullpen display list
+    if (team.pitchers.starter) bullpenPitchers.push(team.pitchers.starter);
+    if (team.pitchers.reliever) bullpenPitchers.push(team.pitchers.reliever);
+    if (team.pitchers.closer) bullpenPitchers.push(team.pitchers.closer);
+    
+    // Filter out any null/undefined pitchers just in case
+    const validBullpenPitchers = bullpenPitchers.filter(p => p);
+
+
+    if (validBullpenPitchers.length === 0) {
+        listElement.innerHTML = '<li>No pitchers in bullpen.</li>';
+        return;
+    }
+
+    validBullpenPitchers.forEach(pitcher => {
+        const listItem = document.createElement('li');
+        const ovrClass = getOvrColorClass(pitcher.ovr);
+        
+        const outs = pitcher.careerOutsRecorded || 0;
+        const runs = pitcher.careerRunsAllowed || 0;
+        // Calculate ERA (RA9: Runs Allowed per 9 innings = 27 outs)
+        const era = outs > 0 ? (runs / outs * 27) : 0;
+        const eraString = outs > 0 ? era.toFixed(2) : "N/A";
+
+
+        if (activePitcher && activePitcher.name === pitcher.name && activePitcher.role === pitcher.role) {
+            listItem.classList.add('active-pitcher-in-bullpen');
+        }
+
+        listItem.innerHTML = `
+            <span class="bullpen-pitcher-ovr ${ovrClass}">${pitcher.ovr}</span>
+            <span class="bullpen-pitcher-name ${ovrClass}">${pitcher.name}</span>
+            <span class="bullpen-pitcher-role">${getPitcherRoleAbbreviation(pitcher.role)}</span>
+            <span class="bullpen-pitcher-era">${eraString}</span>
+            <span class="bullpen-pitcher-stamina">${pitcher.currentStamina}/${pitcher.maxStamina}</span>
+        `;
+        listElement.appendChild(listItem);
+    });
+}
+
 
 export function triggerScoreFlash(runsScored) {
     if (!DOM_ELEMENTS.scoreFlashElement || runsScored <= 0) return;
@@ -376,8 +432,10 @@ export function updateAllDisplays(gameState, gameTeams, teamRecords) {
     const currentBatterForDisplay = gameState.activeBatter;
     const currentPitcherForDisplay = gameState.activePitcher;
 
+    // Update battingOrder for current batter display (not for lineup list)
     if (currentBatterForDisplay && gameTeams[battingTeamKey] && gameTeams[battingTeamKey].batters) {
         const currentBatterActualIndex = gameTeams[battingTeamKey].batters.findIndex(b => b.name === currentBatterForDisplay.name);
+        // This property is only for the current player display card, not the lineup list.
         currentBatterForDisplay.battingOrder = (currentBatterActualIndex !== -1) ? currentBatterActualIndex + 1 : '?';
     }
 
@@ -390,7 +448,9 @@ export function updateAllDisplays(gameState, gameTeams, teamRecords) {
         if (DOM_ELEMENTS.homeCurrentPlayerDisplay) DOM_ELEMENTS.homeCurrentPlayerDisplay.innerHTML = '';
         if (DOM_ELEMENTS.awayTeamLineupList) DOM_ELEMENTS.awayTeamLineupList.innerHTML = '';
         if (DOM_ELEMENTS.homeTeamLineupList) DOM_ELEMENTS.homeTeamLineupList.innerHTML = '';
-    } else {
+        if (DOM_ELEMENTS.awayTeamBullpenList) DOM_ELEMENTS.awayTeamBullpenList.innerHTML = '';
+        if (DOM_ELEMENTS.homeTeamBullpenList) DOM_ELEMENTS.homeTeamBullpenList.innerHTML = '';
+    } else { 
         if (battingTeamKey === 'away') {
             displayCurrentPlayer(currentBatterForDisplay, true, DOM_ELEMENTS.awayCurrentPlayerDisplay);
             displayCurrentPlayer(currentPitcherForDisplay, false, DOM_ELEMENTS.homeCurrentPlayerDisplay);
@@ -404,6 +464,9 @@ export function updateAllDisplays(gameState, gameTeams, teamRecords) {
         }
         displaySingleTeamLineupList('away', gameTeams, gameState.halfInning === 'top' ? currentBatterForDisplay : null);
         displaySingleTeamLineupList('home', gameTeams, gameState.halfInning === 'bottom' ? currentBatterForDisplay : null);
+        displayTeamBullpen('away', gameTeams, currentPitcherForDisplay);
+        displayTeamBullpen('home', gameTeams, currentPitcherForDisplay);
+
         if (DOM_ELEMENTS.mobileBatterDisplay) DOM_ELEMENTS.mobileBatterDisplay.innerHTML = '';
         if (DOM_ELEMENTS.mobilePitcherDisplay) DOM_ELEMENTS.mobilePitcherDisplay.innerHTML = '';
     }
@@ -432,6 +495,7 @@ export function updateOutcomeText(message, outcomeType) {
 
     const messageSpan = document.createElement('span');
     messageSpan.textContent = message;
+
     if (outcomeType && typeof outcomeType === 'string') {
         const generalClass = `outcome-${outcomeType.toLowerCase().replace(/_/g, '-')}`;
         messageSpan.classList.add(generalClass);

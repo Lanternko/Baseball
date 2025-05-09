@@ -37,7 +37,7 @@ h3 { /* Team names in panels */
     padding-bottom: 5px;
     text-align: center;
 }
-h4 { /* "Lineup" title */
+h4 { /* "Lineup" title & "Bullpen" title */
     font-size: 0.9em;
     color: #345;
     margin-top: 15px;
@@ -66,14 +66,14 @@ h4 { /* "Lineup" title */
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.08);
     height: fit-content;
-    max-height: calc(100vh - 60px);
+    max-height: calc(100vh - 60px); /* Adjusted for potential scroll */
     overflow-y: auto;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
     transition: background-color 0.3s ease, border-color 0.3s ease;
 }
-.team-panel.batting-team { /* This style might be overridden by OVR styles if not careful */
+.team-panel.batting-team {
     background-color: #fefefece;
     border-color: #0b1b32;
 }
@@ -82,8 +82,7 @@ h4 { /* "Lineup" title */
     border-color: #ffffff53;
 }
 .team-panel.fielding-team .current-player-display {
-    background-color: #e0e0e0ce; /* Specific for fielding pitcher's card */
-    /* border-color: #b8d4f8; */ /* OVR border will likely override this */
+    background-color: #e0e0e0ce;
 }
 .team-record {
     font-size: 0.8em;
@@ -96,37 +95,16 @@ h4 { /* "Lineup" title */
 /* Current Player Display (Desktop and Mobile - common base for OVR coloring) */
 .current-player-display,
 .mobile-player-display {
-    transition: border-color 0.3s ease, background-color 0.2s ease; /* Smooth color transitions */
-    /* Default border, will be overridden by OVR class */
-    border: 2px solid #c8d6e5; /* Increased thickness for OVR colors */
+    transition: border-color 0.3s ease, background-color 0.2s ease;
+    border: 2px solid #c8d6e5; /* Default border, overridden by OVR */
 }
 
-/* OVR Tier Styling for Panels */
-.current-player-display.ovr-tier-gray,
-.mobile-player-display.ovr-tier-gray {
-    border-color: #adb5bd;
-    background-color: #f8f9fa; /* Subtle tint */
-}
-.current-player-display.ovr-tier-blue,
-.mobile-player-display.ovr-tier-blue {
-    border-color: #36a1ff;
-    background-color: #e7f1ff;
-}
-.current-player-display.ovr-tier-red,
-.mobile-player-display.ovr-tier-red {
-    border-color: #dc3545;
-    background-color: #fdebec;
-}
-.current-player-display.ovr-tier-green,
-.mobile-player-display.ovr-tier-green {
-    border-color: #14af4b;
-    background-color: #e8f5e9;
-}
-.current-player-display.ovr-tier-golden,
-.mobile-player-display.ovr-tier-golden {
-    border-color: #ffea00;
-    background-color: #fff8e1;
-}
+/* OVR Tier Styling for Panels and Player Displays */
+.ovr-tier-gray { border-color: #adb5bd !important; background-color: #f8f9fa !important; }
+.ovr-tier-blue { border-color: #36a1ff !important; background-color: #e7f1ff !important; }
+.ovr-tier-red { border-color: #dc3545 !important; background-color: #fdebec !important; }
+.ovr-tier-green { border-color: #14af4b !important; background-color: #e8f5e9 !important; }
+.ovr-tier-golden { border-color: #ffea00 !important; background-color: #fff8e1 !important; }
 
 
 /* Current Player Display Content (Desktop View) */
@@ -135,7 +113,6 @@ h4 { /* "Lineup" title */
     padding: 10px;
     margin-bottom: 10px;
     min-height: 120px;
-    /* background-color: #fff; */ /* Background now handled by OVR class or default .team-panel */
 }
 .current-player-display h5 {
     margin: 0 0 8px 0;
@@ -146,7 +123,7 @@ h4 { /* "Lineup" title */
     align-items: center;
     border-bottom: 1px solid #c8d6e5;
     padding-bottom: 6px;
-    min-height: 75px;
+    min-height: 75px; 
     justify-content: space-around;
     box-sizing: border-box;
 }
@@ -160,9 +137,9 @@ h4 { /* "Lineup" title */
     text-align: center;
     display: block;
 }
-.current-player-display .player-role-info,
-.current-player-display .player-ovr-info,
-.current-player-display .player-career-stat {
+.current-player-display .player-role-info, 
+.current-player-display .player-ovr-info, 
+.current-player-display .player-career-stat { 
     font-size: 0.85em;
     font-weight: normal;
     color: #444;
@@ -230,71 +207,122 @@ h4 { /* "Lineup" title */
     font-size: 0.85em;
     padding: 6px 3px;
     border-bottom: 1px solid #f0f0f0;
-    display: flex;
-    justify-content: space-between;
+    display: grid; 
+    grid-template-columns: 30px 1fr auto; 
+    gap: 8px; 
     align-items: center;
     line-height: 1.3;
     transition: background-color 0.2s ease;
 }
 .team-panel li:last-child { border-bottom: none; }
-.team-panel li.current-batter-in-lineup {
-    background-color: #dceaff;
-    /* font-weight is now handled by specific spans */
-}
-.player-ovr-lineup { /* OVR in lineup - now just the number */
+
+.player-ovr-lineup {
     font-weight: bold;
     font-size: 0.9em;
-    margin-right: 8px; /* Reduced margin slightly */
     flex-shrink: 0;
-    min-width: 25px; /* Width for "99" */
     text-align: left;
-    /* Color will be set by OVR tier class */
 }
 .player-name-lineup {
-    flex-grow: 1;
-    margin-right: 8px;
+    text-align: left; 
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     font-weight: normal;
-     /* Color will be set by OVR tier class */
 }
-.team-panel li.current-batter-in-lineup .player-name-lineup,
-.team-panel li.current-batter-in-lineup .player-ovr-lineup,
-.team-panel li.current-batter-in-lineup .batter-career-avg {
-    font-weight: bold; /* Make all parts of current batter bold */
-}
-.batter-career-avg {
-    font-size: 0.9em;
+.batter-career-stats { 
+    font-size: 0.85em; 
     color: #495057;
     font-weight: normal;
-    min-width: 45px;
+    min-width: 65px; 
     text-align: right;
     flex-shrink: 0;
+    white-space: nowrap;
 }
 
-/* OVR Tier Text Colors for Lineup (OVR number and Name) */
+.team-panel li.current-batter-in-lineup {
+    background-color: #dcdcdc; 
+}
+.team-panel li.current-batter-in-lineup .player-ovr-lineup,
+.team-panel li.current-batter-in-lineup .player-name-lineup,
+.team-panel li.current-batter-in-lineup .batter-career-stats {
+    color: #000000; 
+    font-weight: bold;
+}
+
+/* OVR Tier Text Colors for Lineup */
 .player-ovr-lineup.ovr-tier-gray,
 .player-name-lineup.ovr-tier-gray { color: #6c757d; }
-
 .player-ovr-lineup.ovr-tier-blue,
 .player-name-lineup.ovr-tier-blue { color: #0056b3; }
-
 .player-ovr-lineup.ovr-tier-red,
 .player-name-lineup.ovr-tier-red { color: #b02a37; }
-
 .player-ovr-lineup.ovr-tier-green,
 .player-name-lineup.ovr-tier-green { color: #155724; }
-
 .player-ovr-lineup.ovr-tier-golden,
 .player-name-lineup.ovr-tier-golden { color: #b08d00; }
 
 
-/* --- Main Game Area & Mobile Styles --- */
-/* (Scoreboard, Field Display, Game Controls, Mobile Styles from previous version) */
-/* Ensure the mobile styles for .mobile-player-display h5 and its children are intact */
-/* and that .mobile-player-display also gets the OVR tier classes for border/background */
+/* Bullpen List Styling */
+.bullpen-title {
+    margin-top: 20px;
+}
+.bullpen-list {
+    margin-top: 5px;
+}
+.bullpen-list li {
+    padding: 5px 3px;
+    font-size: 0.8em;
+    display: grid;
+    /* OVR | Name | Role | ERA | Stamina */
+    grid-template-columns: 30px 1fr auto 45px auto; /* Adjusted for ERA column width */
+    gap: 5px;
+    align-items: center;
+}
+.bullpen-pitcher-ovr {
+    font-weight: bold;
+    text-align: left;
+}
+.bullpen-pitcher-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+}
+.bullpen-pitcher-role {
+    font-style: italic;
+    color: #555;
+    text-align: right;
+}
+.bullpen-pitcher-era { /* New class for ERA */
+    font-size: 0.9em;
+    color: #333;
+    text-align: center;
+    min-width: 40px; /* For "3.45" or "N/A" */
+}
+.bullpen-pitcher-stamina {
+    font-size: 0.9em;
+    color: #333;
+    background-color: #f0f0f0;
+    padding: 1px 4px;
+    border-radius: 3px;
+    text-align: center;
+    min-width: 40px;
+}
+.bullpen-list li.active-pitcher-in-bullpen {
+    background-color: #e9ecef;
+    font-weight: bold;
+}
+.bullpen-list li.active-pitcher-in-bullpen .bullpen-pitcher-ovr,
+.bullpen-list li.active-pitcher-in-bullpen .bullpen-pitcher-name,
+.bullpen-list li.active-pitcher-in-bullpen .bullpen-pitcher-role,
+.bullpen-list li.active-pitcher-in-bullpen .bullpen-pitcher-era,
+.bullpen-list li.active-pitcher-in-bullpen .bullpen-pitcher-stamina {
+    color: #000000; 
+}
+/* End Bullpen List Styling */
 
+
+/* --- Main Game Area & Mobile Styles --- */
 .main-game-area {
     flex-grow: 1; min-width: 0; display: flex; flex-direction: column; align-items: center;
 }
@@ -391,7 +419,7 @@ h4 { /* "Lineup" title */
 #nextPlayButton:disabled { background-color: #6c757d; cursor: not-allowed; }
 #nextPlayButton.simulating { background-color: #ffc107; color: #212529; cursor: default; }
 .game-controls button:active { transform: translateY(1px); }
-/* 外層：放完整漸層 */
+
 .stamina-bar-container{
     position:relative;
     width:100%;
@@ -401,31 +429,33 @@ h4 { /* "Lineup" title */
     background:linear-gradient(
         to right,
         red 0%,
-        #ffe435 30%,
-        rgb(71, 255, 71) 100%
+        orange 50%, 
+        green 100%
     );
     border:1px solid #bbb;
+    box-sizing: border-box;
 }
-
-/* 內層：灰色遮罩，寬度 = 耗盡百分比 */
-.stamina-empty{          /* ← 原本的 .stamina-bar 可以改這名字 */
+.stamina-empty{
     position:absolute;
-    right:0;             /* 從右邊開始遮 */
+    right:0;
     top:0;
     height:100%;
-    background:#d8d8d8;
+    background:#e0e0e0;
     transition:width .3s ease;
 }
-
-/* 文字保持原來設定即可 */
 .stamina-text{
     position:absolute;
     left:50%;
     top:50%;
+    text-align: center;
     transform:translate(-50%,-50%);
     font-size:.75em;
     color:#000;
     pointer-events:none;
+    line-height: 1;
+    white-space: nowrap;
+    width: 100%;
+    text-shadow: none;
 }
 
 
@@ -434,13 +464,13 @@ h4 { /* "Lineup" title */
     body { padding: 5px; font-size: 13px; }
     h1 { font-size: 1.4em; margin-bottom: 8px; }
     .game-layout { flex-direction: column; align-items: center; gap: 10px; }
-    .team-panel { display: none; }
+    .team-panel { display: none; } 
     .main-game-area { width: 100%; padding: 5px 0; }
+
     .mobile-player-info-container { display: flex; justify-content: space-between; margin-bottom: 10px; width: 100%; gap: 8px; }
     .mobile-player-display {
         width: calc(50% - 4px); padding: 8px; border-radius: 6px;
         background-color: #fff; box-sizing: border-box; display: flex; flex-direction: column;
-        /* border: 2px solid #c8d6e5; Inherits from common base now */
     }
     .mobile-player-display h5 {
         margin: 0 0 6px 0; border-bottom: 1px solid #e0e6ec; padding-bottom: 4px;
@@ -458,6 +488,7 @@ h4 { /* "Lineup" title */
         font-size: 0.8em; color: #555; text-align: center; width: 100%; line-height: 1.2;
     }
     .mobile-player-display h5 .player-career-stat { font-style: italic; color: #0056b3; }
+
     .mobile-player-display .player-stats-detailed {
         font-size: 0.75em; gap: 2px 5px; display: grid;
         grid-template-columns: auto 1fr; align-items: center;
@@ -470,6 +501,7 @@ h4 { /* "Lineup" title */
     .mobile-player-display .player-history { display: none; }
     .mobile-player-display .stamina-bar-container { height: 0.8em; margin-top: 1px;}
     .mobile-player-display .stamina-text { font-size: 0.65em; }
+
     .scoreboard-container { margin-bottom: 8px; padding: 8px 5px; }
     #scoreboard th, #scoreboard td { padding: 3px 4px; font-size: 0.7em; min-width: 20px; }
     #scoreboard .team-name { min-width: 50px; }
@@ -478,7 +510,8 @@ h4 { /* "Lineup" title */
     #scoreboard td:not(:first-child):not(:nth-last-child(1)):not(:nth-last-child(2)):not(:nth-last-child(3)) {
         display: none;
     }
-    .scoreboard-container h2 { display: none; }
+    .scoreboard-container h2 { display: none; } 
+
     .field-display { padding: 8px; margin-bottom: 8px; max-width: 100%; }
     .field-header { font-size: 1em; margin-bottom: 8px; padding-bottom: 4px;}
     .out-light { width: 15px; height: 15px; margin: 0 2px;}

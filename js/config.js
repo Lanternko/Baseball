@@ -32,9 +32,9 @@ export const CONFIG = {
             velocity: 3.0,
             control: 2.5,
             technique: 1.5, // "Movement/Deception"
-            staminaEffect: 2.0, // How much maxStamina contributes to OVR
+            staminaEffect: 0.5, // How much maxStamina contributes to OVR
             scale: 1, // Multiplier for the sum of weighted stats
-            base: 25  // Base OVR before adding stat contributions
+            base: 14  // Base OVR before adding stat contributions
         }
     },
     statNormalization: {
@@ -45,7 +45,7 @@ export const CONFIG = {
         techniqueEffectOnSO: 0.01, // Slight increase with technique
         batterContactEffectOnSO: -0.030,
         pitcherControlEffectOnWalk: -0.025,
-        batterPowerEffectOnHR: 0.008,
+        batterPowerEffectOnHR: 0.011,
         pitcherPowerEffectOnHR: -0.0025,
         batterHitRateEffectOnHit: 0.025,
         pitcherPowerEffectOnHit: -0.017
