@@ -32,7 +32,6 @@ export const DOM_ELEMENTS = {
     firstBaseVisual: document.getElementById('firstBase'),
     secondBaseVisual: document.getElementById('secondBase'),
     thirdBaseVisual: document.getElementById('thirdBase'),
-    // pitcherOnMoundName: document.getElementById('pitcherOnMoundName'), // Not currently used, can be removed if no element
     runnerName1B: document.getElementById('runnerName1B'),
     runnerName2B: document.getElementById('runnerName2B'),
     runnerName3B: document.getElementById('runnerName3B'),
@@ -44,8 +43,8 @@ export const DOM_ELEMENTS = {
     // Team Panels (Desktop)
     awayTeamPanel: document.getElementById('awayTeamPanel'),
     homeTeamPanel: document.getElementById('homeTeamPanel'),
-    awayTeamNameDisplayElement: document.getElementById('awayTeamNameDisplay'), // h3 inside awayTeamPanel
-    homeTeamNameDisplayElement: document.getElementById('homeTeamNameDisplay'), // h3 inside homeTeamPanel
+    awayTeamNameDisplayElement: document.getElementById('awayTeamNameDisplay'),
+    homeTeamNameDisplayElement: document.getElementById('homeTeamNameDisplay'),
     awayCurrentPlayerDisplay: document.getElementById('awayCurrentPlayerDisplay'),
     homeCurrentPlayerDisplay: document.getElementById('homeCurrentPlayerDisplay'),
     awayTeamLineupList: document.getElementById('awayTeamLineupList'),
@@ -55,19 +54,15 @@ export const DOM_ELEMENTS = {
     mobileBatterDisplay: document.getElementById('mobileBatterDisplay'),
     mobilePitcherDisplay: document.getElementById('mobilePitcherDisplay'),
 
-    // Standings Spans (ensure these IDs exist in your HTML within the h3s)
+    // Standings Spans
     awayTeamRecordSpan: document.getElementById('awayTeamRecord'),
     homeTeamRecordSpan: document.getElementById('homeTeamRecord'),
 };
 
 // --- UI Initialization ---
-// Accepts gameTeams (with player data) and teamRecords (W-L)
 export function initializeUI(gameTeams, teamRecords) {
-    // Team Names (Scoreboard and Panels)
     if (DOM_ELEMENTS.awayTeamScoreboardName && gameTeams.away) DOM_ELEMENTS.awayTeamScoreboardName.textContent = gameTeams.away.name;
     if (DOM_ELEMENTS.homeTeamScoreboardName && gameTeams.home) DOM_ELEMENTS.homeTeamScoreboardName.textContent = gameTeams.home.name;
-    
-    // Update team names in panels, preserving the record span
     if (DOM_ELEMENTS.awayTeamNameDisplayElement && gameTeams.away) {
         DOM_ELEMENTS.awayTeamNameDisplayElement.childNodes[0].nodeValue = gameTeams.away.name + " ";
     }
@@ -75,13 +70,11 @@ export function initializeUI(gameTeams, teamRecords) {
         DOM_ELEMENTS.homeTeamNameDisplayElement.childNodes[0].nodeValue = gameTeams.home.name + " ";
     }
 
-    // Reset Game State Displays
     if(DOM_ELEMENTS.inningIndicator) DOM_ELEMENTS.inningIndicator.className = 'inning-indicator';
     if(DOM_ELEMENTS.inningNumber) DOM_ELEMENTS.inningNumber.textContent = '-';
     if(DOM_ELEMENTS.outLights) DOM_ELEMENTS.outLights.forEach(light => light.classList.remove('active'));
     if(DOM_ELEMENTS.outcomeText) { DOM_ELEMENTS.outcomeText.innerHTML = "Click 'Start New Game' to begin!"; DOM_ELEMENTS.outcomeText.className = ''; }
 
-    // Clear Scoreboard Details
     const awayCells = DOM_ELEMENTS.awayTeamScoreCells;
     const homeCells = DOM_ELEMENTS.homeTeamScoreCells;
     for (let i = 1; i <= CONFIG.innings; i++) {
@@ -95,7 +88,6 @@ export function initializeUI(gameTeams, teamRecords) {
     if (DOM_ELEMENTS.awayTeamTotalErrorsCell) DOM_ELEMENTS.awayTeamTotalErrorsCell.textContent = '0';
     if (DOM_ELEMENTS.homeTeamTotalErrorsCell) DOM_ELEMENTS.homeTeamTotalErrorsCell.textContent = '0';
 
-    // Clear Bases Visuals
     if(DOM_ELEMENTS.firstBaseVisual) DOM_ELEMENTS.firstBaseVisual.classList.remove('occupied-base');
     if(DOM_ELEMENTS.secondBaseVisual) DOM_ELEMENTS.secondBaseVisual.classList.remove('occupied-base');
     if(DOM_ELEMENTS.thirdBaseVisual) DOM_ELEMENTS.thirdBaseVisual.classList.remove('occupied-base');
@@ -103,7 +95,6 @@ export function initializeUI(gameTeams, teamRecords) {
     if(DOM_ELEMENTS.runnerName2B) { DOM_ELEMENTS.runnerName2B.textContent = ''; DOM_ELEMENTS.runnerName2B.style.display = 'none'; }
     if(DOM_ELEMENTS.runnerName3B) { DOM_ELEMENTS.runnerName3B.textContent = ''; DOM_ELEMENTS.runnerName3B.style.display = 'none'; }
 
-    // Clear Player Display Panels
     const waitingMessage = '<p style="text-align:center; color:#777; font-style:italic;">Waiting...</p>';
     if(DOM_ELEMENTS.awayTeamLineupList) DOM_ELEMENTS.awayTeamLineupList.innerHTML = '';
     if(DOM_ELEMENTS.homeTeamLineupList) DOM_ELEMENTS.homeTeamLineupList.innerHTML = '';
@@ -112,15 +103,32 @@ export function initializeUI(gameTeams, teamRecords) {
     if(DOM_ELEMENTS.mobileBatterDisplay) DOM_ELEMENTS.mobileBatterDisplay.innerHTML = waitingMessage;
     if(DOM_ELEMENTS.mobilePitcherDisplay) DOM_ELEMENTS.mobilePitcherDisplay.innerHTML = waitingMessage;
 
-    // Reset Team Panel Styles
     if(DOM_ELEMENTS.awayTeamPanel) DOM_ELEMENTS.awayTeamPanel.className = 'team-panel';
     if(DOM_ELEMENTS.homeTeamPanel) DOM_ELEMENTS.homeTeamPanel.className = 'team-panel';
 
     updateStandingsDisplay(teamRecords);
 }
 
+// --- Helper Functions ---
+
+
+// NEW: Helper function to get OVR color class
+function getOvrColorClass(ovr) {
+    if (ovr === undefined || ovr === null) return '';
+    const thresholds = CONFIG.ovrColorSettings.thresholds;
+    const classes = CONFIG.ovrColorSettings.classes;
+
+    if (ovr <= thresholds.gray) return classes.gray;
+    if (ovr <= thresholds.blue) return classes.blue;
+    if (ovr <= thresholds.red) return classes.red;
+    if (ovr <= thresholds.green) return classes.green;
+    if (ovr <= thresholds.golden) return classes.golden;
+    return ''; // Default if no threshold met (should not happen with 99 max)
+}
+
 
 // --- Core UI Update Functions ---
+
 function abbreviatePlayerName(fullName, maxLength = 16, panelWidthChars = 15) {
     if (fullName.length <= panelWidthChars) { return fullName; }
     const parts = fullName.split(' ');
@@ -132,10 +140,9 @@ function abbreviatePlayerName(fullName, maxLength = 16, panelWidthChars = 15) {
              abbreviated = `${parts[0][0]}. ${parts.slice(-1)[0].substring(0, Math.max(1,lastNamePartLength-3))}...`; // Ensure substring doesn't go negative
              return abbreviated;
         }
-        // If "F. LastName" is still too long but LastName itself wasn't the issue, truncate fullName
         return fullName.substring(0, maxLength - 3) + "...";
     }
-    return fullName.substring(0, maxLength - 3) + "..."; // Single word name
+    return fullName.substring(0, maxLength - 3) + "...";
 }
 
 function highlightCurrentInningOnScoreboard(currentInning, gameStarted, gameOver, halfInning) {
@@ -143,15 +150,13 @@ function highlightCurrentInningOnScoreboard(currentInning, gameStarted, gameOver
     DOM_ELEMENTS.scoreboardTable.querySelectorAll('thead th, tbody td').forEach(cell => cell.classList.remove('current-inning-active'));
 
     if (gameStarted && !gameOver && currentInning >= 1 && currentInning <= CONFIG.innings) {
-        const inningColumnIndex = currentInning; // This assumes inning columns start after "Team" (index 0)
-
+        const inningColumnIndex = currentInning;
         const headers = DOM_ELEMENTS.scoreboardTable.querySelectorAll('thead th');
-        if (headers && headers.length > inningColumnIndex) { // Check if header exists at this index
+        if (headers && headers.length > inningColumnIndex) {
             headers[inningColumnIndex].classList.add('current-inning-active');
         }
-
         const activeRowCells = halfInning === 'top' ? DOM_ELEMENTS.awayTeamScoreCells : DOM_ELEMENTS.homeTeamScoreCells;
-        if (activeRowCells && activeRowCells.length > inningColumnIndex) { // Check if cell exists
+        if (activeRowCells && activeRowCells.length > inningColumnIndex) {
             activeRowCells[inningColumnIndex].classList.add('current-inning-active');
         }
     }
@@ -161,7 +166,7 @@ export function updateInningDisplay(halfInning, currentInning, gameStarted, game
     if (!DOM_ELEMENTS.inningIndicator || !DOM_ELEMENTS.inningNumber) return;
     if (!gameStarted) { DOM_ELEMENTS.inningIndicator.className = 'inning-indicator'; DOM_ELEMENTS.inningNumber.textContent = '-'; return; }
     if (gameOver) { DOM_ELEMENTS.inningIndicator.className = 'inning-indicator'; DOM_ELEMENTS.inningNumber.textContent = 'Final'; return; }
-    DOM_ELEMENTS.inningIndicator.className = `inning-indicator ${halfInning}`; // 'top' or 'bottom'
+    DOM_ELEMENTS.inningIndicator.className = `inning-indicator ${halfInning}`;
     DOM_ELEMENTS.inningNumber.textContent = String(currentInning);
 }
 
@@ -174,16 +179,14 @@ export function updateOutsDisplay(outs) {
 
 export function updateScoreboard(gameTeams, currentInning, halfInning, outs, gameStarted, gameOver) {
     if (!gameTeams || !gameTeams.away || !gameTeams.home) { console.error("Team data missing for scoreboard update."); return; }
-
     const awayTeamData = gameTeams.away;
     const homeTeamData = gameTeams.home;
     const awayCells = DOM_ELEMENTS.awayTeamScoreCells;
     const homeCells = DOM_ELEMENTS.homeTeamScoreCells;
-
     if (!awayCells || !homeCells) { console.error("Scoreboard cells not found."); return; }
 
     const shouldShowDash = (teamData, inningIndex) => {
-        const inningNum = inningIndex + 1; // inningIndex is 0-based
+        const inningNum = inningIndex + 1;
         if (!gameStarted || inningNum > currentInning) return true;
         if (inningNum === currentInning) {
             if (teamData === awayTeamData && halfInning === 'top' && !gameOver) return true;
@@ -194,7 +197,7 @@ export function updateScoreboard(gameTeams, currentInning, halfInning, outs, gam
     };
 
     for (let i = 0; i < CONFIG.innings; i++) {
-        const cellIndex = i + 1; // Score cells are 1-indexed in the HTMLCollection (after team name)
+        const cellIndex = i + 1;
         if (awayCells[cellIndex]) {
             const runs = awayTeamData.scorePerInning[i];
             awayCells[cellIndex].textContent = shouldShowDash(awayTeamData, i) ? '-' : (runs ?? 0);
@@ -218,14 +221,12 @@ export function updateScoreboard(gameTeams, currentInning, halfInning, outs, gam
 export function updateBasesDisplay(bases, activePitcher) {
     const runnerNameElements = [DOM_ELEMENTS.runnerName1B, DOM_ELEMENTS.runnerName2B, DOM_ELEMENTS.runnerName3B];
     const baseElements = [DOM_ELEMENTS.firstBaseVisual, DOM_ELEMENTS.secondBaseVisual, DOM_ELEMENTS.thirdBaseVisual];
-
-    for (let i = 0; i < 3; i++) { // 0: 1B, 1: 2B, 2: 3B
+    for (let i = 0; i < 3; i++) {
         const nameEl = runnerNameElements[i];
         const baseEl = baseElements[i];
         if (!nameEl || !baseEl) continue;
-
-        if (bases[i]) { // bases is an array like [runnerOn1B, runnerOn2B, runnerOn3B]
-            nameEl.textContent = abbreviatePlayerName(bases[i].name, 10, 8); // Abbreviate for base display
+        if (bases[i]) {
+            nameEl.textContent = abbreviatePlayerName(bases[i].name, 10, 8);
             nameEl.style.display = 'block';
             baseEl.classList.add('occupied-base');
         } else {
@@ -249,7 +250,7 @@ function getPitcherRoleAbbreviation(role) {
         case 'starter': return 'SP';
         case 'reliever': return 'RP';
         case 'closer': return 'CP';
-        default: return role || '?'; // Return original role or '?' if undefined
+        default: return role || '?';
     }
 }
 
@@ -257,9 +258,20 @@ function displayCurrentPlayer(player, isBatter, targetElement) {
     if (!targetElement) return;
     targetElement.innerHTML = '';
 
+    // Reset OVR color classes
+    Object.values(CONFIG.ovrColorSettings.classes).forEach(className => {
+        targetElement.classList.remove(className);
+    });
+
     if (!player) {
         targetElement.innerHTML = `<p style="text-align:center; color:#777; font-style:italic;">${isBatter ? 'Batter' : 'Pitcher'} info not available.</p>`;
         return;
+    }
+
+    // Apply OVR color class to the panel
+    const ovrClass = getOvrColorClass(player.ovr);
+    if (ovrClass) {
+        targetElement.classList.add(ovrClass);
     }
 
     const nameString = player.name;
@@ -267,7 +279,7 @@ function displayCurrentPlayer(player, isBatter, targetElement) {
     const ovrUiString = `OVR: ${player.ovr}`;
     let careerStatString = '';
     let statsGridHTML = '';
-    let historyDisplayHTML = ''; // Renamed to avoid conflict if historyHTML was global
+    let historyDisplayHTML = '';
 
     if (isBatter) {
         const avg = (player.careerAtBats || 0) > 0 ? ((player.careerHits || 0) / player.careerAtBats) : 0;
@@ -280,7 +292,6 @@ function displayCurrentPlayer(player, isBatter, targetElement) {
         `;
         const gameHistory = player.atBatHistory || [];
         const historyItems = gameHistory.map(item => `<span>${item}</span>`).join(' ');
-        // Only show history div if there are items, and only for non-mobile (desktop) view
         if (gameHistory.length > 0 && targetElement !== DOM_ELEMENTS.mobileBatterDisplay) {
              historyDisplayHTML = `<div class="player-history">History: ${historyItems}</div>`;
         }
@@ -289,7 +300,6 @@ function displayCurrentPlayer(player, isBatter, targetElement) {
         const runs = player.careerRunsAllowed || 0;
         const ra9 = outs > 0 ? (runs / outs * 27) : 0;
         careerStatString = `ERA: ${outs > 0 ? ra9.toFixed(2) : 'N/A'}`;
-
         const staminaFilledPercent = player.maxStamina > 0 ? (player.currentStamina / player.maxStamina * 100) : 0;
         const staminaEmptyPercent = 100 - staminaFilledPercent;
         statsGridHTML = `
@@ -323,20 +333,22 @@ function displaySingleTeamLineupList(teamKey, gameTeamsData, currentActiveBatter
     if (!team || !team.batters || !listElement) return;
 
     listElement.innerHTML = '';
-    team.batters.forEach((batter, index) => {
+    team.batters.forEach((batter) => {
         const listItem = document.createElement('li');
-        const battingOrder = index + 1;
         if (batter === currentActiveBatter) {
             listItem.classList.add('current-batter-in-lineup');
         }
+
+        const careerAB = batter.careerAtBats || 0;
+        const careerH = batter.careerHits || 0;
+        const avg = careerAB > 0 ? (careerH / careerAB) : 0;
+        const avgString = avg.toFixed(3);
+        const displayAvg = avg < 1 ? avgString.substring(1) : avgString;
+
+        const ovrClass = getOvrColorClass(batter.ovr); // Get OVR class for the batter
+
         listItem.innerHTML = `
-            <div class="player-info-block">
-                 <div class="player-name-ovr">
-                    <span class="player-name">${battingOrder}. ${batter.name}</span>
-                    <span class="player-ovr">OVR: ${batter.ovr}</span>
-                </div>
-            </div>
-            <span class="batter-score">${batter.performanceString || '0-0'}</span>
+            <span class="player-ovr-lineup ${ovrClass}">${batter.ovr}</span> <span class="player-name-lineup ${ovrClass}">${batter.name}</span> <span class="batter-career-avg">${displayAvg}</span>
         `;
         listElement.appendChild(listItem);
     });
@@ -348,12 +360,11 @@ export function triggerScoreFlash(runsScored) {
     DOM_ELEMENTS.scoreFlashElement.classList.add('show');
     setTimeout(() => {
         DOM_ELEMENTS.scoreFlashElement.classList.remove('show');
-    }, 600); // Match CSS transition duration
+    }, 600);
 }
 
 export function updateAllDisplays(gameState, gameTeams, teamRecords) {
     if (!gameState || !gameTeams) { console.error("Missing gameState or gameTeams for updateAllDisplays"); return; }
-
     const isMobileView = window.innerWidth <= 768;
 
     updateInningDisplay(gameState.halfInning, gameState.currentInning, gameState.gameStarted, gameState.gameOver);
@@ -362,13 +373,11 @@ export function updateAllDisplays(gameState, gameTeams, teamRecords) {
     updateScoreboard(gameTeams, gameState.currentInning, gameState.halfInning, gameState.outs, gameState.gameStarted, gameState.gameOver);
 
     const battingTeamKey = gameState.halfInning === 'top' ? 'away' : 'home';
-    // const fieldingTeamKey = gameState.halfInning === 'top' ? 'home' : 'away'; // Not directly used below
     const currentBatterForDisplay = gameState.activeBatter;
     const currentPitcherForDisplay = gameState.activePitcher;
 
-    // Ensure battingOrder is set on the batter object if it exists
     if (currentBatterForDisplay && gameTeams[battingTeamKey] && gameTeams[battingTeamKey].batters) {
-        const currentBatterActualIndex = gameTeams[battingTeamKey].batters.findIndex(b => b.name === currentBatterForDisplay.name); // Match by name for safety
+        const currentBatterActualIndex = gameTeams[battingTeamKey].batters.findIndex(b => b.name === currentBatterForDisplay.name);
         currentBatterForDisplay.battingOrder = (currentBatterActualIndex !== -1) ? currentBatterActualIndex + 1 : '?';
     }
 
@@ -377,13 +386,11 @@ export function updateAllDisplays(gameState, gameTeams, teamRecords) {
     if (isMobileView) {
         if (DOM_ELEMENTS.mobileBatterDisplay) displayCurrentPlayer(currentBatterForDisplay, true, DOM_ELEMENTS.mobileBatterDisplay);
         if (DOM_ELEMENTS.mobilePitcherDisplay) displayCurrentPlayer(currentPitcherForDisplay, false, DOM_ELEMENTS.mobilePitcherDisplay);
-        // Clear desktop player displays
         if (DOM_ELEMENTS.awayCurrentPlayerDisplay) DOM_ELEMENTS.awayCurrentPlayerDisplay.innerHTML = '';
         if (DOM_ELEMENTS.homeCurrentPlayerDisplay) DOM_ELEMENTS.homeCurrentPlayerDisplay.innerHTML = '';
-        // Clear desktop lineups
         if (DOM_ELEMENTS.awayTeamLineupList) DOM_ELEMENTS.awayTeamLineupList.innerHTML = '';
         if (DOM_ELEMENTS.homeTeamLineupList) DOM_ELEMENTS.homeTeamLineupList.innerHTML = '';
-    } else { // Desktop view
+    } else {
         if (battingTeamKey === 'away') {
             displayCurrentPlayer(currentBatterForDisplay, true, DOM_ELEMENTS.awayCurrentPlayerDisplay);
             displayCurrentPlayer(currentPitcherForDisplay, false, DOM_ELEMENTS.homeCurrentPlayerDisplay);
@@ -397,7 +404,6 @@ export function updateAllDisplays(gameState, gameTeams, teamRecords) {
         }
         displaySingleTeamLineupList('away', gameTeams, gameState.halfInning === 'top' ? currentBatterForDisplay : null);
         displaySingleTeamLineupList('home', gameTeams, gameState.halfInning === 'bottom' ? currentBatterForDisplay : null);
-         // Clear mobile displays
         if (DOM_ELEMENTS.mobileBatterDisplay) DOM_ELEMENTS.mobileBatterDisplay.innerHTML = '';
         if (DOM_ELEMENTS.mobilePitcherDisplay) DOM_ELEMENTS.mobilePitcherDisplay.innerHTML = '';
     }
@@ -421,22 +427,14 @@ const eventKeywords = {
 
 export function updateOutcomeText(message, outcomeType) {
     if (!DOM_ELEMENTS.outcomeText) return;
-    DOM_ELEMENTS.outcomeText.innerHTML = ''; // Clear previous content
-    DOM_ELEMENTS.outcomeText.className = 'outcome-neutral'; // Reset to default
+    DOM_ELEMENTS.outcomeText.innerHTML = '';
+    DOM_ELEMENTS.outcomeText.className = 'outcome-neutral';
 
     const messageSpan = document.createElement('span');
     messageSpan.textContent = message;
-
     if (outcomeType && typeof outcomeType === 'string') {
-        // Apply a general class based on the outcomeType
         const generalClass = `outcome-${outcomeType.toLowerCase().replace(/_/g, '-')}`;
         messageSpan.classList.add(generalClass);
-
-        // More specific keyword styling can be added here if needed,
-        // but ensure it doesn't conflict with the general outcomeType class.
-        // For example, if outcomeType is "HOMERUN", generalClass will be "outcome-homerun".
-        // If message also contains "home run", it might try to apply it again.
-        // The current approach of a general class is simpler.
     }
     DOM_ELEMENTS.outcomeText.appendChild(messageSpan);
 }
