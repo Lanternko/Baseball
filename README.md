@@ -1,3 +1,6 @@
+Baseball simulation games.
+Can be play in website(recommend PC) https://lanternko.github.io/Baseball/
+
 ```baseball_simulator/
 ├── index.html
 ├── style.css
