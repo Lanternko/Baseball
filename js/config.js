@@ -1,4 +1,7 @@
 // js/config.js
+// This file contains the configuration settings for the baseball simulation game.
+// It includes settings for innings, base probabilities, stamina effects, speed effects,
+// overall ratings (OVR) weights, stat normalization effects, probability caps, and stat colors.
 export const CONFIG = {
     innings: 9,
     baseProbabilities: {
@@ -31,13 +34,13 @@ export const CONFIG = {
             scale: 1, base: 25
         },
         pitcher: {
-            power: 3.0, // "Stuff"
-            velocity: 3.0,
-            control: 2.5,
-            technique: 1.5, // "Movement/Deception"
-            staminaEffect: 0.5, // How much maxStamina contributes to OVR
-            scale: 1, // Multiplier for the sum of weighted stats
-            base: 14  // Base OVR before adding stat contributions
+            power: 2.4, // "Stuff"
+            velocity: 2.4,
+            control: 2.0,
+            technique: 1.6, // "Movement/Deception"
+            staminaEffect: 0.25, // How much maxStamina contributes to OVR
+            scale: 0.85, // Multiplier for the sum of weighted stats
+            base: 32  // Base OVR before adding stat contributions
         }
     },
     statNormalization: {
@@ -67,7 +70,7 @@ export const CONFIG = {
         medium: 6,
         high: 8,
         elite: 10
-    },
+    }, 
     // NEW: OVR Color Theming
     ovrColorSettings: {
         thresholds: { // Upper bound for each tier
