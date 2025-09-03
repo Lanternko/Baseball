@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MLB Stats to POW/HIT/EYE Converter</title>
+</head>
+<body>
+    <h1>MLB Stats Converter</h1>
+    <div id="output"></div>
+
+    <!-- Load Baseball_algo models -->
+    <script src="js/shared_constants.js"></script>
+    <script src="js/shared_probability_model.js"></script>
+    <script src="js/shared_ovr_calculator.js"></script>
+    <script src="js/shared_woba_ovr_mapping.js"></script>
+
+    <script>
+        // American League lineup data
+        const alPlayers = [
+            { name: "Gleyber Torres", pos: "2B", team: "DET", avg: 0.263, obp: 0.365, slg: 0.398 },
+            { name: "Riley Greene", pos: "CF", team: "DET", avg: 0.270, obp: 0.325, slg: 0.514 },
+            { name: "Aaron Judge", pos: "RF", team: "NYY", avg: 0.324, obp: 0.443, slg: 0.674 },
+            { name: "Cal Raleigh", pos: "C", team: "SEA", avg: 0.242, obp: 0.353, slg: 0.577 },
+            { name: "Vladimir Guerrero Jr.", pos: "1B", team: "TOR", avg: 0.289, obp: 0.385, slg: 0.477 },
+            { name: "Ryan O'Hearn", pos: "DH", team: "SD", avg: 0.278, obp: 0.369, slg: 0.451 },
+            { name: "Junior Caminero", pos: "3B", team: "TB", avg: 0.258, obp: 0.300, slg: 0.530 },
+            { name: "Javier Báez", pos: "SS", team: "DET", avg: 0.261, obp: 0.288, slg: 0.404 },
+            { name: "Jacob Wilson", pos: "LF", team: "OAK", avg: 0.318, obp: 0.358, slg: 0.456 }
+        ];
+
+        // National League placeholder (using some sample NL players for now)
+        const nlPlayers = [
+            { name: "Mookie Betts", pos: "RF", team: "LAD", avg: 0.289, obp: 0.372, slg: 0.491 },
+            { name: "Francisco Lindor", pos: "SS", team: "NYM", avg: 0.273, obp: 0.344, slg: 0.500 },
+            { name: "Juan Soto", pos: "LF", team: "WSH", avg: 0.288, obp: 0.419, slg: 0.569 },
+            { name: "Freddie Freeman", pos: "1B", team: "LAD", avg: 0.282, obp: 0.378, slg: 0.476 },
+            { name: "Manny Machado", pos: "3B", team: "SD", avg: 0.275, obp: 0.329, slg: 0.466 },
+            { name: "Bryce Harper", pos: "DH", team: "PHI", avg: 0.285, obp: 0.373, slg: 0.525 },
+            { name: "Ronald Acuña Jr.", pos: "CF", team: "ATL", avg: 0.337, obp: 0.416, slg: 0.596 },
+            { name: "Will Smith", pos: "C", team: "LAD", avg: 0.248, obp: 0.328, slg: 0.433 },
+            { name: "Ozzie Albies", pos: "2B", team: "ATL", avg: 0.258, obp: 0.310, slg: 0.407 }
+        ];
+
+        function convertStatsToAttributes(player) {
+            try {
+                // Calculate wOBA from stats (simplified formula)
+                const woba = (0.692 * (player.obp - player.avg) * 600) + 
+                            (0.879 * player.avg * 600 * 0.7) + 
+                            (1.242 * player.avg * 600 * 0.2) + 
+                            (2.081 * player.avg * 600 * ((player.slg - player.avg) / 3));
+                const paApprox = 600;
+                const calculatedWoba = woba / paApprox;
+
+                // Use Baseball_algo conversion functions if available
+                if (typeof window.getAttributeScoreHybrid === 'function') {
+                    const pow = window.getAttributeScoreHybrid(player.slg, 0.310, 0.400, 0.640, 'SLG');
+                    const hit = window.getAttributeScoreHybrid(player.avg, 0.200, 0.250, 0.330, 'BA');  
+                    const eye = window.getAttributeScoreHybrid(calculatedWoba, 0.260, 0.320, 0.430, 'OBA');
+                    
+                    return {
+                        POW: Math.round(Math.max(1, Math.min(99, pow))),
+                        HIT: Math.round(Math.max(1, Math.min(99, hit))),
+                        EYE: Math.round(Math.max(1, Math.min(99, eye)))
+                    };
+                } else {
+                    // Fallback linear conversion
+                    return {
+                        POW: Math.round(Math.max(1, Math.min(99, (player.slg - 0.3) * 200 + 40))),
+                        HIT: Math.round(Math.max(1, Math.min(99, (player.avg - 0.2) * 400 + 40))),
+                        EYE: Math.round(Math.max(1, Math.min(99, (player.obp - 0.28) * 350 + 40)))
+                    };
+                }
+            } catch (error) {
+                console.error('Conversion error for', player.name, error);
+                return { POW: 50, HIT: 50, EYE: 50 };
+            }
+        }
+
+        function generateTeamsData() {
+            const output = document.getElementById('output');
+            let html = '<h2>Converted Team Data</h2><pre>';
+            
+            // Convert AL players
+            const alConverted = alPlayers.map(player => {
+                const attrs = convertStatsToAttributes(player);
+                return {
+                    name: player.name,
+                    pos: player.pos,
+                    type: "batter",
+                    realStats: {
+                        AVG: player.avg,
+                        OBP: player.obp,
+                        SLG: player.slg,
+                        team: player.team
+                    },
+                    stats: {
+                        power: attrs.POW,
+                        hitRate: attrs.HIT,
+                        contact: attrs.EYE,
+                        speed: 60 // Default speed
+                    }
+                };
+            });
+
+            // Convert NL players  
+            const nlConverted = nlPlayers.map(player => {
+                const attrs = convertStatsToAttributes(player);
+                return {
+                    name: player.name,
+                    pos: player.pos,
+                    type: "batter",
+                    realStats: {
+                        AVG: player.avg,
+                        OBP: player.obp,
+                        SLG: player.slg,
+                        team: player.team
+                    },
+                    stats: {
+                        power: attrs.POW,
+                        hitRate: attrs.HIT,
+                        contact: attrs.EYE,
+                        speed: 60 // Default speed
+                    }
+                };
+            });
+
+            // Generate team structure
+            const teamsData = [
+                {
+                    id: "AL",
+                    name: "American League All-Stars",
+                    batters: alConverted,
+                    pitchers: {
+                        startersRotation: [{
+                            name: "Tarik Skubal",
+                            type: "pitcher",
+                            stats: {
+                                role: "Starter",
+                                power: 92,
+                                velocity: 88,
+                                control: 85,
+                                technique: 90,
+                                maxStamina: 1000
+                            }
+                        }],
+                        reliever: {
+                            name: "AL Reliever",
+                            type: "pitcher",
+                            stats: {
+                                role: "Reliever",
+                                power: 85,
+                                velocity: 90,
+                                control: 80,
+                                technique: 85,
+                                maxStamina: 400
+                            }
+                        },
+                        closer: {
+                            name: "AL Closer",
+                            type: "pitcher",
+                            stats: {
+                                role: "Closer",
+                                power: 90,
+                                velocity: 95,
+                                control: 85,
+                                technique: 88,
+                                maxStamina: 200
+                            }
+                        }
+                    }
+                },
+                {
+                    id: "NL",
+                    name: "National League All-Stars", 
+                    batters: nlConverted,
+                    pitchers: {
+                        startersRotation: [{
+                            name: "Paul Skenes",
+                            type: "pitcher",
+                            stats: {
+                                role: "Starter",
+                                power: 95,
+                                velocity: 98,
+                                control: 80,
+                                technique: 88,
+                                maxStamina: 1000
+                            }
+                        }],
+                        reliever: {
+                            name: "NL Reliever",
+                            type: "pitcher", 
+                            stats: {
+                                role: "Reliever",
+                                power: 88,
+                                velocity: 92,
+                                control: 82,
+                                technique: 86,
+                                maxStamina: 400
+                            }
+                        },
+                        closer: {
+                            name: "NL Closer",
+                            type: "pitcher",
+                            stats: {
+                                role: "Closer",
+                                power: 92,
+                                velocity: 96,
+                                control: 84,
+                                technique: 90,
+                                maxStamina: 200
+                            }
+                        }
+                    }
+                }
+            ];
+
+            html += 'export const ALL_TEAMS = ' + JSON.stringify(teamsData, null, 2);
+            html += '</pre>';
+            
+            // Add summary table
+            html += '<h3>AL Conversion Summary</h3><table border="1"><tr><th>Player</th><th>AVG</th><th>OBP</th><th>SLG</th><th>→</th><th>POW</th><th>HIT</th><th>EYE</th></tr>';
+            alConverted.forEach(p => {
+                html += `<tr><td>${p.name}</td><td>${p.realStats.AVG}</td><td>${p.realStats.OBP}</td><td>${p.realStats.SLG}</td><td>→</td><td>${p.stats.power}</td><td>${p.stats.hitRate}</td><td>${p.stats.contact}</td></tr>`;
+            });
+            html += '</table>';
+
+            html += '<h3>NL Conversion Summary</h3><table border="1"><tr><th>Player</th><th>AVG</th><th>OBP</th><th>SLG</th><th>→</th><th>POW</th><th>HIT</th><th>EYE</th></tr>';
+            nlConverted.forEach(p => {
+                html += `<tr><td>${p.name}</td><td>${p.realStats.AVG}</td><td>${p.realStats.OBP}</td><td>${p.realStats.SLG}</td><td>→</td><td>${p.stats.power}</td><td>${p.stats.hitRate}</td><td>${p.stats.contact}</td></tr>`;
+            });
+            html += '</table>';
+
+            output.innerHTML = html;
+        }
+
+        // Run conversion when page loads
+        window.addEventListener('load', () => {
+            setTimeout(generateTeamsData, 1000); // Give models time to load
+        });
+    </script>
+</body>
+</html>

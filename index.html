@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>9-Innings Baseball Simulator</title>
+    <title>9 Innings Baseball Simulator</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>9-Inning Baseball Simulator</h1>
+    <h1>9 Innings Baseball Simulator</h1>
 
     <div class="game-layout">
         <div class="team-panel" id="awayTeamPanel">
@@ -108,6 +108,13 @@
         </div>
     </div>
 
+    <!-- Load advanced Baseball_algo models -->
+    <script src="js/shared_constants.js"></script>
+    <script src="js/shared_probability_model.js"></script>
+    <script src="js/shared_ovr_calculator.js"></script>
+    <script src="js/shared_woba_ovr_mapping.js"></script>
+    
+    <!-- Load main game module -->
     <script type="module" src="js/main.js"></script>
 </body>
 </html>

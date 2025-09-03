@@ -26,33 +26,29 @@ export const CONFIG = {
         baseHitIsDoubleChance: 0.25
     },
     ovrWeights: {
-         batter: {
-            power: 2.8, hitRate: 2.8, contact: 2.2, speed: 1.2,
-            scale: 1, base: 25
-        },
-        pitcher: {
-            power: 3.0, // "Stuff"
-            velocity: 3.0,
-            control: 2.5,
-            technique: 1.5, // "Movement/Deception"
-            staminaEffect: 0.5, // How much maxStamina contributes to OVR
-            scale: 1, // Multiplier for the sum of weighted stats
-            base: 14  // Base OVR before adding stat contributions
-        }
+    batter: {
+      power: 0.28, hitRate: 0.28, contact: 0.22, speed: 0.12,
+      scale: 1, base: 2.5
     },
+    pitcher: {
+      power: 0.30, velocity: 0.30, control: 0.25, technique: 0.15,
+      staminaEffect: 0.05,  // 0.5 → 0.05
+      scale: 1, base: 1.4
+    }
+    },
+    // 2️⃣ statNormalization（全部 ÷10） 
     statNormalization: {
-        pitcherPowerEffectOnSO: 0.024,
-        velocityEffectOnSO: 0.020,
-        velocityEffectOnHit: -0.015,
-        techniqueEffectOnHR: -0.013,
-        techniqueEffectOnSO: 0.008, // Slight increase with technique
-        pitcherControlEffectOnWalk: -0.023,
-        pitcherPowerEffectOnHR: -0.0023,
-        pitcherPowerEffectOnHit: -0.015,
-        
-        batterContactEffectOnSO: -0.033,
-        batterPowerEffectOnHR: 0.017,
-        batterHitRateEffectOnHit: 0.022
+    pitcherPowerEffectOnSO : 0.0024,
+    velocityEffectOnSO     : 0.0020,
+    velocityEffectOnHit    : -0.0015,
+    techniqueEffectOnHR    : -0.0013,
+    techniqueEffectOnSO    : 0.0008,
+    pitcherControlEffectOnWalk: -0.0023,
+    pitcherPowerEffectOnHR : -0.00023,
+    pitcherPowerEffectOnHit: -0.0015,
+    batterContactEffectOnSO: -0.0033,
+    batterPowerEffectOnHR  : 0.0017,
+    batterHitRateEffectOnHit: 0.0022
     },
     probabilityCaps: {
         strikeout: { min: 0.05, max: 0.50 },
@@ -62,12 +58,9 @@ export const CONFIG = {
         outMin: 0.10, // Minimum probability for a generic out
         sumOfDeterminedRatesCap: 0.95 // Max sum for SO, BB, HR, OtherHit before calculating generic out
     },
-    statColors: { // For individual stat value display (1-10)
-        low: 3,
-        medium: 6,
-        high: 8,
-        elite: 10
-    },
+    // 1️⃣ statColors
+    statColors: { low: 30, medium: 60, high: 80, elite: 100 },
+
     // NEW: OVR Color Theming
     ovrColorSettings: {
         thresholds: { // Upper bound for each tier

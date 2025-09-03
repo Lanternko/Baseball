@@ -98,86 +98,135 @@ export function initializeGame(gameTeams, awayStarterRotationIndex, homeStarterR
     console.log(`Game initialized. Away Starter: ${gameState.awayStartingPitcherThisGame?.name}, Home Starter: ${gameState.homeStartingPitcherThisGame?.name}`);
 }
 
+// 🔥 ADVANCED SIMULATION ENGINE using Baseball_algo models
 function simulateAtBat(batter, pitcher) {
-    // ... (您的 simulateAtBat 邏輯保持不變)
-    let effectivePower = pitcher.power;
-    let effectiveControl = pitcher.control;
-    effectivePower   += (pitcher.velocity - 5) * 0.5;
-    effectiveControl += (pitcher.velocity - 5) * 0.2;
+    // Handle pitcher stamina and effectiveness
     const staminaPercentage = pitcher.currentStamina > 0 ? (pitcher.currentStamina / pitcher.maxStamina) : 0;
+    let pitcherEffectiveness = 1.0;
+    
     if (staminaPercentage < CONFIG.stamina.penaltyThreshold2) {
-        effectivePower -= CONFIG.stamina.penaltyAmount2;
-        effectiveControl -= CONFIG.stamina.penaltyAmount2;
+        pitcherEffectiveness = 0.7; // Significant penalty
     } else if (staminaPercentage < CONFIG.stamina.penaltyThreshold1) {
-        effectivePower -= CONFIG.stamina.penaltyAmount1;
-        effectiveControl -= CONFIG.stamina.penaltyAmount1;
+        pitcherEffectiveness = 0.85; // Moderate penalty
     }
-    effectivePower = Math.max(1, effectivePower);
-    effectiveControl = Math.max(1, effectiveControl);
-    const staminaDrain = Math.floor(Math.random() * (CONFIG.stamina.depletionPerBatterMax - CONFIG.stamina.depletionPerBatterMin + 1)) + CONFIG.stamina.depletionPerBatterMin;
+    
+    // Drain pitcher stamina
+    const staminaDrain = Math.floor(Math.random() * 
+        (CONFIG.stamina.depletionPerBatterMax - CONFIG.stamina.depletionPerBatterMin + 1)) + 
+        CONFIG.stamina.depletionPerBatterMin;
     pitcher.currentStamina = Math.max(0, pitcher.currentStamina - staminaDrain);
-    let adjRates = { ...CONFIG.baseProbabilities };
-    adjRates.strikeout += (effectivePower - 5) * CONFIG.statNormalization.pitcherPowerEffectOnSO +
-                          (pitcher.velocity - 5) * CONFIG.statNormalization.velocityEffectOnSO +
-                          (pitcher.technique - 5) * CONFIG.statNormalization.techniqueEffectOnSO +
-                          (batter.contact - 5) * CONFIG.statNormalization.batterContactEffectOnSO;
-    adjRates.strikeout = Math.max(CONFIG.probabilityCaps.strikeout.min, Math.min(adjRates.strikeout, CONFIG.probabilityCaps.strikeout.max));
-    adjRates.walk += ((5 - effectiveControl)) * Math.abs(CONFIG.statNormalization.pitcherControlEffectOnWalk);
-    adjRates.walk = Math.max(CONFIG.probabilityCaps.walk.min, Math.min(adjRates.walk, CONFIG.probabilityCaps.walk.max));
-    adjRates.homeRun += (batter.power - 5) * CONFIG.statNormalization.batterPowerEffectOnHR +
-                        (effectivePower - 5) * CONFIG.statNormalization.pitcherPowerEffectOnHR +
-                        (pitcher.technique - 5) * CONFIG.statNormalization.techniqueEffectOnHR;
-    adjRates.homeRun = Math.max(CONFIG.probabilityCaps.homeRun.min, Math.min(adjRates.homeRun, CONFIG.probabilityCaps.homeRun.max));
-    adjRates.otherHit += (batter.hitRate - 5) * CONFIG.statNormalization.batterHitRateEffectOnHit +
-                         (effectivePower - 5) * CONFIG.statNormalization.pitcherPowerEffectOnHit +
-                         (pitcher.velocity - 5) * CONFIG.statNormalization.velocityEffectOnHit;
-    adjRates.otherHit = Math.max(CONFIG.probabilityCaps.otherHit.min, Math.min(adjRates.otherHit, CONFIG.probabilityCaps.otherHit.max));
-    let sumOfDeterminedRates = adjRates.strikeout + adjRates.walk + adjRates.homeRun + adjRates.otherHit;
-    if (sumOfDeterminedRates > CONFIG.probabilityCaps.sumOfDeterminedRatesCap) {
-        const scaleDown = CONFIG.probabilityCaps.sumOfDeterminedRatesCap / sumOfDeterminedRates;
-        adjRates.strikeout *= scaleDown; adjRates.walk *= scaleDown; adjRates.homeRun *= scaleDown; adjRates.otherHit *= scaleDown;
-        sumOfDeterminedRates = CONFIG.probabilityCaps.sumOfDeterminedRatesCap;
+    
+    // Get batter attributes - convert from old system to POW/HIT/EYE
+    const batterPOW = Math.max(1, batter.power || 50);
+    const batterHIT = Math.max(1, batter.hitRate || 50); 
+    const batterEYE = Math.max(1, batter.contact || 50); // Using contact as EYE proxy
+    
+    // Apply pitcher effectiveness to batter attributes (pitcher dominance)
+    const effectivePOW = Math.max(1, batterPOW * pitcherEffectiveness);
+    const effectiveHIT = Math.max(1, batterHIT * pitcherEffectiveness);
+    const effectiveEYE = Math.max(1, batterEYE * pitcherEffectiveness);
+    
+    // Use advanced simulation engine from Baseball_algo
+    let atBatResult;
+    if (typeof window !== 'undefined' && typeof window.simulateSimpleAtBat === 'function') {
+        // Use the sophisticated probability model
+        atBatResult = window.simulateSimpleAtBat(
+            effectiveEYE, effectiveHIT, effectivePOW,
+            Math.random(), Math.random(), Math.random(), Math.random()
+        );
+    } else {
+        // Fallback to basic simulation if advanced models not loaded
+        console.warn('Advanced simulation models not loaded, using basic fallback');
+        atBatResult = simulateBasicAtBat(batter, pitcher, pitcherEffectiveness);
     }
-    adjRates.out = 1.0 - sumOfDeterminedRates;
-    if (adjRates.out < CONFIG.probabilityCaps.outMin) {
-        const deficit = CONFIG.probabilityCaps.outMin - adjRates.out;
-        adjRates.out = CONFIG.probabilityCaps.outMin;
-        const totalToReduceFrom = adjRates.strikeout + adjRates.walk + adjRates.homeRun + adjRates.otherHit;
-        if (totalToReduceFrom > 0) {
-            adjRates.strikeout -= deficit * (adjRates.strikeout / totalToReduceFrom);
-            adjRates.walk      -= deficit * (adjRates.walk / totalToReduceFrom);
-            adjRates.homeRun   -= deficit * (adjRates.homeRun / totalToReduceFrom);
-            adjRates.otherHit  -= deficit * (adjRates.otherHit / totalToReduceFrom);
+    
+    // Convert advanced simulation result to game outcome format
+    let outcome = convertSimResultToOutcome(atBatResult, batter, pitcher);
+    
+    // Apply speed-based modifications for hits
+    if (outcome.event === "SINGLE" && batter.speed) {
+        if (batter.speed > 7 && Math.random() < CONFIG.speed.stretchSingleToDoubleFast) {
+            outcome.event = "DOUBLE";
+            outcome.basesAdvanced = 2;
+            outcome.description = outcome.description.replace("SINGLE", "DOUBLE");
+        } else if (batter.speed > 5 && Math.random() < CONFIG.speed.stretchSingleToDoubleMedium) {
+            outcome.event = "DOUBLE";
+            outcome.basesAdvanced = 2;
+            outcome.description = outcome.description.replace("SINGLE", "DOUBLE");
         }
     }
-    const finalSum = adjRates.strikeout + adjRates.walk + adjRates.homeRun + adjRates.otherHit + adjRates.out;
-    if (finalSum !== 1.0 && finalSum > 0) {
-        const scale = 1.0 / finalSum;
-        adjRates.strikeout *= scale; adjRates.walk *= scale; adjRates.homeRun *= scale; adjRates.otherHit *= scale; adjRates.out *= scale;
-    } else if (finalSum === 0) { adjRates.out = 1.0; }
-    const random = Math.random(); let cumulativeProbability = 0; let outcome = {};
-    cumulativeProbability += adjRates.strikeout;
-    if (random < cumulativeProbability) { outcome = { event: "STRIKEOUT", description: `${batter.name} STRIKES OUT!  `, batter, pitcher }; }
-    else { cumulativeProbability += adjRates.walk;
-        if (random < cumulativeProbability) { outcome = { event: "WALK", description: `${batter.name} draws a WALK.  `, batter, pitcher, basesAdvanced: 1 }; }
-        else { cumulativeProbability += adjRates.homeRun;
-            if (random < cumulativeProbability) { outcome = { event: "HOMERUN", description: `HOME RUN for ${batter.name}!!  `, batter, pitcher, basesAdvanced: 4 }; }
-            else { cumulativeProbability += adjRates.otherHit;
-                if (random < cumulativeProbability) {
-                    let hitType = "SINGLE"; let basesAdv = 1;
-                    if (Math.random() < CONFIG.speed.baseHitIsDoubleChance) { hitType = "DOUBLE"; basesAdv = 2; }
-                    if (hitType === "SINGLE" && batter.speed > 7 && Math.random() < CONFIG.speed.stretchSingleToDoubleFast) { hitType = "DOUBLE"; basesAdv = 2; }
-                    else if (hitType === "SINGLE" && batter.speed > 5 && Math.random() < CONFIG.speed.stretchSingleToDoubleMedium) { hitType = "DOUBLE"; basesAdv = 2; }
-                    outcome = { event: hitType, description: `${batter.name} hits a ${hitType}!  `, batter, pitcher, basesAdvanced: basesAdv };
-                } else {
-                    const outTypes = ["Grounds Out", "Flies Out", "Lines Out", "Pops Up"];
-                    const randomOutDesc = outTypes[Math.floor(Math.random() * outTypes.length)];
-                    outcome = { event: "OUT", description: `${batter.name} ${randomOutDesc}.  `, batter, pitcher };
-                }
-            }
-        }
-    }
+    
     return outcome;
+}
+
+// Fallback basic simulation if advanced models not available
+function simulateBasicAtBat(batter, pitcher, effectiveness) {
+    const random = Math.random();
+    
+    // Basic probability thresholds adjusted by pitcher effectiveness
+    const strikeoutRate = 0.23 * (2 - effectiveness); // Higher when pitcher effective
+    const walkRate = 0.08 * effectiveness; // Lower when pitcher effective  
+    const homerunRate = 0.04 * effectiveness;
+    const hitRate = 0.27 * effectiveness;
+    
+    if (random < strikeoutRate) return 'K';
+    if (random < strikeoutRate + walkRate) return 'BB';
+    if (random < strikeoutRate + walkRate + homerunRate) return 'HR';
+    if (random < strikeoutRate + walkRate + homerunRate + hitRate) {
+        return Math.random() < 0.25 ? '2B' : '1B';
+    }
+    return 'OUT';
+}
+
+// Convert advanced simulation results to game outcome format
+function convertSimResultToOutcome(simResult, batter, pitcher) {
+    const eventMap = {
+        'K': {
+            event: 'STRIKEOUT',
+            description: `${batter.name} STRIKES OUT!  `,
+            basesAdvanced: 0
+        },
+        'BB': {
+            event: 'WALK', 
+            description: `${batter.name} draws a WALK.  `,
+            basesAdvanced: 1
+        },
+        'HR': {
+            event: 'HOMERUN',
+            description: `HOME RUN for ${batter.name}!!  `,
+            basesAdvanced: 4
+        },
+        '2B': {
+            event: 'DOUBLE',
+            description: `${batter.name} hits a DOUBLE!  `,
+            basesAdvanced: 2
+        },
+        '1B': {
+            event: 'SINGLE', 
+            description: `${batter.name} hits a SINGLE!  `,
+            basesAdvanced: 1
+        },
+        'OUT': {
+            event: 'OUT',
+            description: `${batter.name} ${getRandomOutType()}.  `,
+            basesAdvanced: 0
+        }
+    };
+    
+    const outcomeTemplate = eventMap[simResult] || eventMap['OUT'];
+    
+    return {
+        event: outcomeTemplate.event,
+        description: outcomeTemplate.description,
+        basesAdvanced: outcomeTemplate.basesAdvanced,
+        batter: batter,
+        pitcher: pitcher
+    };
+}
+
+function getRandomOutType() {
+    const outTypes = ["Grounds Out", "Flies Out", "Lines Out", "Pops Up"];
+    return outTypes[Math.floor(Math.random() * outTypes.length)];
 }
 
 function processAtBatOutcome(atBatOutcome, gameTeams) {

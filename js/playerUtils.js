@@ -1,14 +1,36 @@
 import { CONFIG } from './config.js';
 import { loadData, PLAYER_STATS_KEY } from './storageUtils.js';
-import { ALL_TEAMS, getTeamById as getBaseTeamById } from './teamsData.js';
+import { ALL_TEAMS, getTeamById as getBaseTeamById } from './teamsdata.js';
 
-// OVR 計算函數 (保持不變)
+// 🔥 ADVANCED OVR CALCULATION using Baseball_algo models
 function calculateBatterOVR(batter) {
+    // Convert batter attributes to POW/HIT/EYE system
+    const pow = batter.power || 50;
+    const hit = batter.hitRate || 50;
+    const eye = batter.contact || 50; // Using contact as EYE proxy
+    
+    // Use advanced OVR calculation if available
+    if (typeof window !== 'undefined' && typeof window.calculateBatterOVR === 'function') {
+        try {
+            const result = window.calculateBatterOVR(pow, hit, eye);
+            return result.ovr || fallbackCalculateBatterOVR(batter);
+        } catch (error) {
+            console.warn('Advanced OVR calculation failed, using fallback:', error);
+            return fallbackCalculateBatterOVR(batter);
+        }
+    }
+    
+    // Fallback to old calculation method
+    return fallbackCalculateBatterOVR(batter);
+}
+
+// Fallback OVR calculation (original method)
+function fallbackCalculateBatterOVR(batter) {
     const w = CONFIG.ovrWeights.batter;
-    const power   = batter.power   ?? 5;
-    const hitRate = batter.hitRate ?? 5;
-    const contact = batter.contact ?? 5;
-    const speed   = batter.speed   ?? 5;
+    const power   = (batter.power   ?? 50);
+    const hitRate = (batter.hitRate ?? 50);
+    const contact = (batter.contact ?? 50);
+    const speed   = (batter.speed   ?? 50);
     const score = power * w.power + hitRate * w.hitRate + contact * w.contact + speed * w.speed;
     const ovr = Math.round(score * w.scale + w.base);
     return Math.min(99, Math.max(40, ovr));
@@ -16,10 +38,10 @@ function calculateBatterOVR(batter) {
 
 function calculatePitcherOVR(p) {
   const w = CONFIG.ovrWeights.pitcher;
-  const power     = p.power     ?? 5;
-  const velocity  = p.velocity  ?? 5;
-  const control   = p.control   ?? 5;
-  const technique = p.technique ?? 5;
+  const power     = p.power     ?? 50;
+  const velocity  = p.velocity  ?? 50;
+  const control   = p.control   ?? 50;
+  const technique = p.technique ?? 50;
   const maxSta    = p.maxStamina ?? 70;
   const staminaScore = Math.max(0, (maxSta - 60) / 40) * (10 * w.staminaEffect);
   const score =
